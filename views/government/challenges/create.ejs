@@ -1,0 +1,137 @@
+<div class="mb-6">
+    <a href="/government/challenges" class="text-sm text-primary hover:underline flex items-center gap-1 mb-4">
+        &larr; Back to Challenges
+    </a>
+    <h1 class="text-2xl font-bold text-gray-900">Create New Challenge</h1>
+    <p class="text-sm text-gray-500">Define the problem and let AI help you structure it into an outcome-based challenge.</p>
+</div>
+
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div class="p-6 border-b border-gray-200 bg-gray-50">
+        <h2 class="text-lg font-medium text-gray-900 mb-2">Step 1: State the Problem</h2>
+        <div class="flex flex-col md:flex-row gap-4 items-end">
+            <div class="flex-grow">
+                <label for="rawProblem" class="block text-sm font-medium text-gray-700 mb-1">What operational problem are you facing?</label>
+                <textarea id="rawProblem" rows="3" class="w-full border border-gray-300 rounded-md p-2 focus:ring-primary focus:border-primary" placeholder="E.g., Ambulances are getting delayed because of traffic congestion in the city center..."></textarea>
+            </div>
+            <button type="button" id="aiGenerateBtn" class="bg-accent text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors flex-shrink-0 h-10 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                Generate with AI
+            </button>
+        </div>
+    </div>
+
+    <form action="/government/challenges/create" method="POST" class="p-6 space-y-6">
+        <input type="hidden" name="rawProblem" id="hiddenRawProblem">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Challenge Title *</label>
+                <input type="text" id="title" name="title" required class="w-full border border-gray-300 rounded-md p-2">
+            </div>
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select id="status" name="status" class="w-full border border-gray-300 rounded-md p-2">
+                    <option value="DRAFT">Draft</option>
+                    <option value="PUBLISHED">Published</option>
+                </select>
+            </div>
+        </div>
+
+        <div>
+            <label for="problemStatement" class="block text-sm font-medium text-gray-700 mb-1">Problem Statement</label>
+            <textarea id="problemStatement" name="problemStatement" rows="2" class="w-full border border-gray-300 rounded-md p-2"></textarea>
+        </div>
+
+        <div>
+            <label for="desiredOutcome" class="block text-sm font-medium text-gray-700 mb-1">Desired Outcome</label>
+            <textarea id="desiredOutcome" name="desiredOutcome" rows="2" class="w-full border border-gray-300 rounded-md p-2"></textarea>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="target" class="block text-sm font-medium text-gray-700 mb-1">Target Value</label>
+                <input type="text" id="target" name="target" placeholder="E.g., 15 minutes" class="w-full border border-gray-300 rounded-md p-2">
+            </div>
+            <div>
+                <label for="pilotDuration" class="block text-sm font-medium text-gray-700 mb-1">Expected Pilot Duration</label>
+                <input type="text" id="pilotDuration" name="pilotDuration" placeholder="E.g., 30 Days" class="w-full border border-gray-300 rounded-md p-2">
+            </div>
+        </div>
+
+        <div>
+            <label for="kpis" class="block text-sm font-medium text-gray-700 mb-1">Suggested KPIs (comma separated)</label>
+            <input type="text" id="kpis" name="kpis" class="w-full border border-gray-300 rounded-md p-2">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="technologies" class="block text-sm font-medium text-gray-700 mb-1">Required Technologies (comma separated)</label>
+                <input type="text" id="technologies" name="technologies" class="w-full border border-gray-300 rounded-md p-2">
+            </div>
+            <div>
+                <label for="requiredCapabilities" class="block text-sm font-medium text-gray-700 mb-1">Required Capabilities (comma separated)</label>
+                <input type="text" id="requiredCapabilities" name="requiredCapabilities" class="w-full border border-gray-300 rounded-md p-2">
+            </div>
+        </div>
+
+        <div class="pt-4 border-t border-gray-200 flex justify-end">
+            <button type="submit" class="bg-primary text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors">
+                Save Challenge
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('aiGenerateBtn').addEventListener('click', async () => {
+    const rawProblem = document.getElementById('rawProblem').value;
+    if (!rawProblem.trim()) {
+        alert('Please enter a problem description first.');
+        return;
+    }
+
+    const btn = document.getElementById('aiGenerateBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'Generating...';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch('/api/ai/structure-problem', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ rawProblem })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert('AI generation failed: ' + data.error);
+        } else {
+            // Fill form fields
+            document.getElementById('hiddenRawProblem').value = rawProblem;
+            document.getElementById('title').value = "Innovation Challenge: " + data.problemStatement.substring(0, 30) + "...";
+            document.getElementById('problemStatement').value = data.problemStatement || '';
+            document.getElementById('desiredOutcome').value = data.desiredOutcome || '';
+            if (data.kpis) document.getElementById('kpis').value = data.kpis.join(', ');
+            if (data.technologies) document.getElementById('technologies').value = data.technologies.join(', ');
+            if (data.capabilities) document.getElementById('requiredCapabilities').value = data.capabilities.join(', ');
+            
+            // Highlight fields briefly
+            const fields = ['title', 'problemStatement', 'desiredOutcome', 'kpis', 'technologies', 'requiredCapabilities'];
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.add('bg-blue-50');
+                setTimeout(() => el.classList.remove('bg-blue-50'), 1500);
+            });
+        }
+    } catch (err) {
+        alert('Failed to connect to AI service.');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+});
+</script>

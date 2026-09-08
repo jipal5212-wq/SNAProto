@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GovPilot - Government Innovation Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1d4ed8',
+                        secondary: '#475569',
+                        accent: '#2563eb',
+                        success: '#16a34a',
+                        warning: '#ea580c',
+                        danger: '#dc2626'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Custom CSS (if any) -->
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans min-h-screen flex flex-col">
+    <%- include('../partials/header') %>
+    
+    <div class="flex-grow flex w-full">
+        <% if (user) { %>
+            <%- include('../partials/sidebar') %>
+        <% } %>
+        
+        <main class="flex-grow p-6 w-full max-w-7xl mx-auto">
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm" role="alert">
+                    <p><%= error %></p>
+                </div>
+            <% } %>
+            <% if (typeof success !== 'undefined' && success) { %>
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded shadow-sm" role="alert">
+                    <p><%= success %></p>
+                </div>
+            <% } %>
+            
+            <%- include('../' + body) %>
+        </main>
+    </div>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

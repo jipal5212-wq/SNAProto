@@ -1,0 +1,131 @@
+<div class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">System Administration</h1>
+        <p class="text-gray-500 mt-1">Platform overview, database status, and cross-department governance</p>
+    </div>
+    <div class="flex items-center gap-3">
+        <a href="/seed" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+            <svg class="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Seed / Reset Data
+        </a>
+        <a href="/challenges" class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-white bg-primary hover:bg-blue-700 shadow-sm transition-colors">
+            Browse Marketplace
+        </a>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+    <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Departments</span>
+        <div class="text-3xl font-extrabold text-gray-900 mt-2"><%= stats.totalDepartments %></div>
+    </div>
+    <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Startups</span>
+        <div class="text-3xl font-extrabold text-primary mt-2"><%= stats.totalStartups %></div>
+    </div>
+    <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Challenges</span>
+        <div class="text-3xl font-extrabold text-indigo-600 mt-2"><%= stats.totalChallenges %></div>
+    </div>
+    <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Applications</span>
+        <div class="text-3xl font-extrabold text-purple-600 mt-2"><%= stats.totalApplications %></div>
+    </div>
+    <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Pilots</span>
+        <div class="text-3xl font-extrabold text-amber-600 mt-2"><%= stats.totalPilots %></div>
+    </div>
+    <div class="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+        <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Users</span>
+        <div class="text-3xl font-extrabold text-emerald-600 mt-2"><%= stats.totalUsers %></div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <!-- Recent Challenges -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+            <h2 class="text-base font-bold text-gray-900">Recent Challenges</h2>
+            <a href="/government/challenges" class="text-xs font-semibold text-primary hover:underline">View All</a>
+        </div>
+        <div class="divide-y divide-gray-100">
+            <% if (recentChallenges && recentChallenges.length > 0) { %>
+                <% recentChallenges.forEach(c => { %>
+                    <div class="p-5 hover:bg-gray-50 transition-colors flex justify-between items-center">
+                        <div>
+                            <span class="inline-block px-2 py-0.5 text-xs font-medium rounded bg-blue-50 text-blue-700 mb-1">
+                                <%= c.sector || 'General' %>
+                            </span>
+                            <h3 class="font-semibold text-gray-900 text-sm">
+                                <a href="/government/challenges/<%= c._id %>" class="hover:text-primary"><%= c.title %></a>
+                            </h3>
+                            <p class="text-xs text-gray-500 mt-0.5"><%= c.department ? c.department.name : 'Unknown Department' %></p>
+                        </div>
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full <%= c.status === 'PUBLISHED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
+                            <%= c.status %>
+                        </span>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="p-8 text-center text-gray-400 text-sm">No challenges found</div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Active Pilots -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+            <h2 class="text-base font-bold text-gray-900">Active & Recent Pilots</h2>
+            <a href="/government/pilots" class="text-xs font-semibold text-primary hover:underline">View All</a>
+        </div>
+        <div class="divide-y divide-gray-100">
+            <% if (recentPilots && recentPilots.length > 0) { %>
+                <% recentPilots.forEach(p => { %>
+                    <div class="p-5 hover:bg-gray-50 transition-colors flex justify-between items-center">
+                        <div>
+                            <h3 class="font-semibold text-gray-900 text-sm">
+                                <a href="/government/pilots/<%= p._id %>" class="hover:text-primary"><%= p.objective %></a>
+                            </h3>
+                            <div class="text-xs text-gray-500 mt-1 flex items-center gap-3">
+                                <span>Startup: <strong class="text-gray-700"><%= p.startup ? p.startup.name : 'N/A' %></strong></span>
+                                <span>Dept: <%= p.department ? p.department.name : 'N/A' %></span>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full <%= p.status === 'SCALE_UP_RECOMMENDED' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' %>">
+                            <%= p.status.replace(/_/g, ' ') %>
+                        </span>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="p-8 text-center text-gray-400 text-sm">No pilots found</div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Registered Startups -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+        <h2 class="text-base font-bold text-gray-900">Registered Startups in Innovation Ecosystem</h2>
+    </div>
+    <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <% if (recentStartups && recentStartups.length > 0) { %>
+                <% recentStartups.forEach(s => { %>
+                    <div class="p-4 border border-gray-200 rounded-lg hover:border-primary/50 transition-colors">
+                        <div class="font-bold text-gray-900 text-sm"><%= s.name %></div>
+                        <p class="text-xs text-gray-500 mt-1 line-clamp-2"><%= s.description || 'No description provided.' %></p>
+                        <div class="flex flex-wrap gap-1 mt-3">
+                            <% (s.technologies || []).slice(0, 3).forEach(t => { %>
+                                <span class="px-2 py-0.5 text-[10px] rounded bg-gray-100 text-gray-600 font-medium"><%= t %></span>
+                            <% }) %>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } %>
+        </div>
+    </div>
+</div>

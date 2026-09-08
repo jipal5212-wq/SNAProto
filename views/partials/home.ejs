@@ -1,0 +1,41 @@
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div class="p-8 text-center sm:p-12">
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl mb-4">
+            Government Innovation Procurement & Pilot Platform
+        </h1>
+        <p class="max-w-2xl mx-auto text-xl text-gray-500 mb-8">
+            Define the problem, discover innovation, test it through a controlled pilot, measure the outcome, and scale what works.
+        </p>
+        
+        <% if (!user) { %>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="/auth/login" class="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700">
+                    Login to Portal
+                </a>
+                <a href="/challenges" class="inline-flex justify-center items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    View Open Challenges
+                </a>
+            </div>
+            
+            <div class="mt-12 bg-blue-50 rounded-lg p-6 max-w-lg mx-auto text-left border border-blue-100">
+                <h3 class="text-lg font-semibold text-blue-900 mb-3">Demo Accounts</h3>
+                <ul class="space-y-2 text-sm text-blue-800">
+                    <li><strong>Government:</strong> gov@demo.com / password</li>
+                    <li><strong>Startup:</strong> startup@demo.com / password</li>
+                    <li><strong>Evaluator:</strong> evaluator@demo.com / password</li>
+                    <li><strong>Admin:</strong> admin@demo.com / password</li>
+                </ul>
+            </div>
+        <% } else { %>
+            <div class="flex justify-center mt-6">
+                <% if (user.role === 'GOVERNMENT' || user.role === 'EVALUATOR') { %>
+                    <a href="/government/dashboard" class="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700">Go to Dashboard</a>
+                <% } else if (user.role === 'STARTUP') { %>
+                    <a href="/startup/dashboard" class="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700">Go to Dashboard</a>
+                <% } else if (user.role === 'ADMIN') { %>
+                    <a href="/admin/dashboard" class="inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-blue-700">Go to Admin Dashboard</a>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+</div>

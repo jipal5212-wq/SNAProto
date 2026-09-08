@@ -1,0 +1,111 @@
+<div class="mb-6">
+    <a href="/government/challenges/<%= challenge._id %>/applications" class="text-sm text-primary hover:underline flex items-center gap-1 mb-4">
+        &larr; Back to Applications
+    </a>
+    <h1 class="text-2xl font-bold text-gray-900">Create Pilot</h1>
+    <p class="text-gray-500 mt-1">Challenge: <span class="font-semibold"><%= challenge.title %></span> | Startup: <span class="font-semibold"><%= startup.name %></span></p>
+</div>
+
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <form action="/government/pilots/create" method="POST" class="p-6 space-y-8">
+        <input type="hidden" name="challengeId" value="<%= challenge._id %>">
+        <input type="hidden" name="startupId" value="<%= startup._id %>">
+        
+        <!-- Basic Info -->
+        <div>
+            <h2 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Pilot Configuration</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label for="objective" class="block text-sm font-medium text-gray-700 mb-1">Pilot Objective *</label>
+                    <input type="text" id="objective" name="objective" required class="w-full border border-gray-300 rounded-md p-2" value="Test and validate <%= startup.name %>'s solution for <%= challenge.title %>">
+                </div>
+                <div>
+                    <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Pilot Location / Context</label>
+                    <input type="text" id="location" name="location" class="w-full border border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label for="budget" class="block text-sm font-medium text-gray-700 mb-1">Allocated Budget ($)</label>
+                    <input type="number" id="budget" name="budget" class="w-full border border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <input type="date" id="startDate" name="startDate" class="w-full border border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                    <input type="date" id="endDate" name="endDate" class="w-full border border-gray-300 rounded-md p-2">
+                </div>
+            </div>
+        </div>
+
+        <!-- KPIs -->
+        <div>
+            <h2 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Key Performance Indicators (KPIs)</h2>
+            <p class="text-sm text-gray-500 mb-4">Define measurable KPIs to track during the pilot.</p>
+            
+            <div id="kpi-container" class="space-y-4">
+                <!-- KPI Row 1 -->
+                <div class="bg-gray-50 p-4 border border-gray-200 rounded-md grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">KPI Name</label>
+                        <input type="text" name="kpiNames" placeholder="e.g. Response Time" required class="w-full border border-gray-300 rounded p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Direction</label>
+                        <select name="kpiDirections" class="w-full border border-gray-300 rounded p-2 text-sm">
+                            <option value="lower_is_better">Lower is Better (e.g. Time)</option>
+                            <option value="higher_is_better">Higher is Better (e.g. Satisfaction)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Baseline Value (Number)</label>
+                        <input type="number" step="any" name="kpiBaselines" required class="w-full border border-gray-300 rounded p-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Target Value (Number)</label>
+                        <input type="number" step="any" name="kpiTargets" required class="w-full border border-gray-300 rounded p-2 text-sm">
+                    </div>
+                </div>
+            </div>
+            
+            <button type="button" onclick="addKpiRow()" class="mt-4 text-sm text-primary font-medium hover:underline flex items-center gap-1">
+                + Add Another KPI
+            </button>
+        </div>
+
+        <div class="pt-4 border-t border-gray-200 flex justify-end">
+            <button type="submit" class="bg-primary text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors">
+                Activate Pilot
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function addKpiRow() {
+    const container = document.getElementById('kpi-container');
+    const html = `
+    <div class="bg-gray-50 p-4 border border-gray-200 rounded-md grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+        <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">KPI Name</label>
+            <input type="text" name="kpiNames" class="w-full border border-gray-300 rounded p-2 text-sm">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Direction</label>
+            <select name="kpiDirections" class="w-full border border-gray-300 rounded p-2 text-sm">
+                <option value="lower_is_better">Lower is Better</option>
+                <option value="higher_is_better">Higher is Better</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Baseline</label>
+            <input type="number" step="any" name="kpiBaselines" class="w-full border border-gray-300 rounded p-2 text-sm">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Target</label>
+            <input type="number" step="any" name="kpiTargets" class="w-full border border-gray-300 rounded p-2 text-sm">
+        </div>
+    </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+}
+</script>

@@ -1,0 +1,139 @@
+<div class="mb-6">
+    <a href="/challenges" class="text-sm text-primary hover:underline flex items-center gap-1 mb-4">
+        &larr; Back to Challenges
+    </a>
+    
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <span class="inline-block px-2 py-1 text-xs font-semibold rounded bg-blue-100 text-blue-800 mb-2">
+                <%= challenge.sector || 'Innovation' %>
+            </span>
+            <h1 class="text-3xl font-bold text-gray-900"><%= challenge.title %></h1>
+            <p class="text-gray-500 mt-1">Published by: <%= challenge.department ? challenge.department.name : 'Unknown Department' %></p>
+        </div>
+        
+        <% if (user && user.role === 'STARTUP') { %>
+            <% if (hasApplied) { %>
+                <span class="bg-green-100 text-green-800 px-4 py-2 rounded-md font-medium border border-green-200">
+                    ✓ Application Submitted
+                </span>
+            <% } else { %>
+                <a href="/challenges/<%= challenge._id %>/apply" class="bg-primary text-white px-6 py-2 rounded-md font-medium shadow-sm hover:bg-blue-700">
+                    Apply to Challenge
+                </a>
+            <% } %>
+        <% } %>
+        
+        <% if (user && user.role === 'GOVERNMENT' && user.department && user.department.toString() === (challenge.department ? challenge.department._id.toString() : '')) { %>
+            <a href="/government/challenges/<%= challenge._id %>/applications" class="bg-primary text-white px-6 py-2 rounded-md font-medium shadow-sm hover:bg-blue-700">
+                View Applications
+            </a>
+        <% } %>
+    </div>
+</div>
+
+<% if (user && user.role === 'STARTUP' && matchScore !== null) { %>
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8 flex flex-col md:flex-row gap-6 items-center">
+        <div class="flex-shrink-0">
+            <div class="relative w-24 h-24 flex items-center justify-center bg-white rounded-full border-4 <%= matchScore > 75 ? 'border-green-500' : (matchScore > 50 ? 'border-yellow-500' : 'border-red-500') %> shadow-sm">
+                <span class="text-2xl font-bold text-gray-900"><%= matchScore %>%</span>
+            </div>
+            <p class="text-center text-xs font-semibold text-gray-600 mt-2 uppercase tracking-wide">Match Score</p>
+        </div>
+        <div>
+            <h3 class="text-lg font-bold text-gray-900 mb-1">AI-Assisted Compatibility Score</h3>
+            <p class="text-gray-700 text-sm"><%= matchExplanation || 'This score reflects how well your startup profile aligns with this challenge.' %></p>
+        </div>
+    </div>
+<% } %>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-2 space-y-8">
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">The Problem</h2>
+            <div class="prose prose-sm sm:prose text-gray-700">
+                <p><%= challenge.problemStatement || challenge.rawProblem %></p>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Desired Outcome</h2>
+            <div class="prose prose-sm sm:prose text-gray-700">
+                <p><%= challenge.desiredOutcome %></p>
+                <% if (challenge.target) { %>
+                    <div class="mt-4 bg-gray-50 p-4 border-l-4 border-primary rounded-r">
+                        <strong>Target:</strong> <%= challenge.target %>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <% if (challenge.kpis && challenge.kpis.length > 0) { %>
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Key Performance Indicators (KPIs)</h2>
+                <ul class="list-disc pl-5 space-y-2 text-gray-700">
+                    <% challenge.kpis.forEach(kpi => { %>
+                        <li><%= kpi %></li>
+                    <% }) %>
+                </ul>
+            </div>
+        <% } %>
+    </div>
+    
+    <div class="space-y-6">
+        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Challenge Details</h3>
+            
+            <dl class="space-y-4">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Budget Range</dt>
+                    <dd class="mt-1 text-sm text-gray-900 font-semibold">
+                        <%= challenge.budgetMin && challenge.budgetMax ? `$${challenge.budgetMin.toLocaleString()} - $${challenge.budgetMax.toLocaleString()}` : 'Not Specified' %>
+                    </dd>
+                </div>
+                
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Expected Pilot Duration</dt>
+                    <dd class="mt-1 text-sm text-gray-900 font-semibold">
+                        <%= challenge.pilotDuration || 'Not Specified' %>
+                    </dd>
+                </div>
+                
+                <% if (challenge.deadline) { %>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Application Deadline</dt>
+                        <dd class="mt-1 text-sm text-gray-900 font-semibold text-red-600">
+                            <%= new Date(challenge.deadline).toLocaleDateString() %>
+                        </dd>
+                    </div>
+                <% } %>
+            </dl>
+        </div>
+        
+        <% if (challenge.technologies && challenge.technologies.length > 0) { %>
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Required Technologies</h3>
+                <div class="flex flex-wrap gap-2">
+                    <% challenge.technologies.forEach(tech => { %>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                            <%= tech %>
+                        </span>
+                    <% }) %>
+                </div>
+            </div>
+        <% } %>
+        
+        <% if (challenge.requiredCapabilities && challenge.requiredCapabilities.length > 0) { %>
+            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-3">Required Capabilities</h3>
+                <div class="flex flex-wrap gap-2">
+                    <% challenge.requiredCapabilities.forEach(cap => { %>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 border border-indigo-200">
+                            <%= cap %>
+                        </span>
+                    <% }) %>
+                </div>
+            </div>
+        <% } %>
+    </div>
+</div>

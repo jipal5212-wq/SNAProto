@@ -1,0 +1,83 @@
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+        <a href="/admin/dashboard" class="text-sm text-primary hover:underline flex items-center gap-1 mb-4">
+            &larr; Back to Admin Dashboard
+        </a>
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Database Seed & Demo Manager</h1>
+        <p class="text-gray-500 mt-1">Reset and populate your platform with a complete end-to-end hackathon demonstration scenario</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+        <h2 class="text-lg font-bold text-gray-900 mb-2">Hackathon Demo Dataset Includes:</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <h3 class="font-semibold text-gray-800 text-sm mb-1">🏛️ Government Departments</h3>
+                <p class="text-xs text-gray-600">Health, Transport, Municipal Services with department managers.</p>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <h3 class="font-semibold text-gray-800 text-sm mb-1">🚀 Startups</h3>
+                <p class="text-xs text-gray-600">ABC Technologies, Rapid Logistics, CleanWater AI with tech stacks & readiness.</p>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <h3 class="font-semibold text-gray-800 text-sm mb-1">📋 Outcome-Based Challenges</h3>
+                <p class="text-xs text-gray-600">Emergency Response Optimization, Public Transit AI, and Waste Stream Analytics.</p>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                <h3 class="font-semibold text-gray-800 text-sm mb-1">📊 Complete Pilot & Recommendation</h3>
+                <p class="text-xs text-gray-600">Active pilot with 4 KPIs measured, validation report, and SCALE UP recommendation.</p>
+            </div>
+        </div>
+
+        <div class="mt-6 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <div class="font-bold text-gray-900 text-sm">Reset & Populate Database</div>
+                <div class="text-xs text-gray-500">This will drop existing demo collections and re-insert the clean scenario.</div>
+            </div>
+            <form action="/seed" method="POST" onsubmit="return confirm('Are you sure you want to reset and re-seed the database? Current demo changes will be overwritten.');">
+                <button type="submit" class="inline-flex items-center px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Re-Seed Database Now
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">Demo Credentials (Password: <code class="bg-gray-100 px-2 py-0.5 rounded text-primary">password</code>)</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-600">Role</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-600">Email</th>
+                        <th class="px-4 py-2 text-left font-semibold text-gray-600">Associated Entity</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <tr>
+                        <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800">GOVERNMENT</span></td>
+                        <td class="px-4 py-3 font-mono text-xs">gov@demo.com</td>
+                        <td class="px-4 py-3 text-gray-600">Department of Health</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-green-100 text-green-800">STARTUP</span></td>
+                        <td class="px-4 py-3 font-mono text-xs">startup@demo.com</td>
+                        <td class="px-4 py-3 text-gray-600">ABC Technologies</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-purple-100 text-purple-800">EVALUATOR</span></td>
+                        <td class="px-4 py-3 font-mono text-xs">evaluator@demo.com</td>
+                        <td class="px-4 py-3 text-gray-600">Independent Expert Reviewer</td>
+                    </tr>
+                    <tr>
+                        <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">ADMIN</span></td>
+                        <td class="px-4 py-3 font-mono text-xs">admin@demo.com</td>
+                        <td class="px-4 py-3 text-gray-600">System Platform Administrator</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

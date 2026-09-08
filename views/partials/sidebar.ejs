@@ -1,0 +1,23 @@
+<aside class="w-64 bg-white border-r border-gray-200 min-h-[calc(100vh-4rem)] flex flex-col shadow-sm hidden md:flex">
+    <nav class="flex-1 px-4 py-6 space-y-2">
+        <% if (user.role === 'GOVERNMENT' || user.role === 'EVALUATOR') { %>
+            <a href="/government/dashboard" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium transition-colors">Dashboard</a>
+            <a href="/government/challenges" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium transition-colors">Challenges</a>
+            <a href="/government/applications" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium transition-colors">Applications</a>
+            <a href="/government/pilots" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium transition-colors">Pilots</a>
+        <% } %>
+        
+        <% if (user.role === 'STARTUP') { %>
+            <a href="/startup/dashboard" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium transition-colors">Dashboard</a>
+            <a href="/challenges" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium transition-colors">Discover Challenges</a>
+            <a href="/startup/applications" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium transition-colors">My Applications</a>
+            <a href="/startup/pilots" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium transition-colors">My Pilots</a>
+            <a href="/startup/profile" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium transition-colors">Profile</a>
+        <% } %>
+
+        <% if (user.role === 'ADMIN') { %>
+            <a href="/admin/dashboard" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium transition-colors">Admin Dashboard</a>
+            <a href="/seed" class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-primary rounded-lg font-medium transition-colors">Seed Data</a>
+        <% } %>
+    </nav>
+</aside>

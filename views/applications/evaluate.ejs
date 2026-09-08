@@ -1,0 +1,120 @@
+<div class="mb-6">
+    <a href="/government/challenges/<%= application.challenge._id %>/applications" class="text-sm text-primary hover:underline flex items-center gap-1 mb-4">
+        &larr; Back to Applications
+    </a>
+    <h1 class="text-2xl font-bold text-gray-900">Evaluate Solution</h1>
+    <p class="text-gray-500 mt-1">Startup: <span class="font-semibold"><%= application.startup ? application.startup.name : 'Unknown' %></span></p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="space-y-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Application Details</h2>
+            
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-gray-500 uppercase">Solution Title</h3>
+                <p class="text-gray-900 font-medium"><%= application.solutionTitle %></p>
+            </div>
+            
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-gray-500 uppercase">Solution Description</h3>
+                <p class="text-gray-700 whitespace-pre-wrap text-sm"><%= application.solutionDescription %></p>
+            </div>
+
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-gray-500 uppercase">Technical Approach</h3>
+                <p class="text-gray-700 whitespace-pre-wrap text-sm"><%= application.technicalApproach %></p>
+            </div>
+
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-gray-500 uppercase">Implementation Plan</h3>
+                <p class="text-gray-700 whitespace-pre-wrap text-sm"><%= application.implementationPlan %></p>
+            </div>
+
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-gray-500 uppercase">Expected Impact</h3>
+                <p class="text-gray-700 whitespace-pre-wrap text-sm"><%= application.expectedImpact %></p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+                <div>
+                    <h3 class="text-sm font-bold text-gray-500 uppercase">Estimated Cost</h3>
+                    <p class="text-gray-900 font-medium"><%= application.estimatedCost ? '$'+application.estimatedCost.toLocaleString() : 'N/A' %></p>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-gray-500 uppercase">AI Match Score</h3>
+                    <span class="inline-block bg-blue-100 text-blue-800 font-bold px-2 py-1 rounded text-sm"><%= application.matchScore %>%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 sticky top-20">
+            <h2 class="text-lg font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">Evaluation Form</h2>
+            
+            <form action="/government/applications/<%= application._id %>/evaluate" method="POST" class="space-y-4">
+                
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label for="technicalFeasibility" class="block text-sm font-medium text-gray-700">Technical Feasibility (25%)</label>
+                        <span class="text-xs text-gray-500">0-100</span>
+                    </div>
+                    <input type="number" min="0" max="100" id="technicalFeasibility" name="technicalFeasibility" value="<%= existingEval ? existingEval.technicalFeasibility : '' %>" required class="w-full border border-gray-300 rounded-md p-2">
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label for="expectedImpact" class="block text-sm font-medium text-gray-700">Expected Impact (25%)</label>
+                        <span class="text-xs text-gray-500">0-100</span>
+                    </div>
+                    <input type="number" min="0" max="100" id="expectedImpact" name="expectedImpact" value="<%= existingEval ? existingEval.expectedImpact : '' %>" required class="w-full border border-gray-300 rounded-md p-2">
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label for="innovation" class="block text-sm font-medium text-gray-700">Innovation (20%)</label>
+                        <span class="text-xs text-gray-500">0-100</span>
+                    </div>
+                    <input type="number" min="0" max="100" id="innovation" name="innovation" value="<%= existingEval ? existingEval.innovation : '' %>" required class="w-full border border-gray-300 rounded-md p-2">
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label for="scalability" class="block text-sm font-medium text-gray-700">Scalability (15%)</label>
+                        <span class="text-xs text-gray-500">0-100</span>
+                    </div>
+                    <input type="number" min="0" max="100" id="scalability" name="scalability" value="<%= existingEval ? existingEval.scalability : '' %>" required class="w-full border border-gray-300 rounded-md p-2">
+                </div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label for="costEffectiveness" class="block text-sm font-medium text-gray-700">Cost Effectiveness (15%)</label>
+                        <span class="text-xs text-gray-500">0-100</span>
+                    </div>
+                    <input type="number" min="0" max="100" id="costEffectiveness" name="costEffectiveness" value="<%= existingEval ? existingEval.costEffectiveness : '' %>" required class="w-full border border-gray-300 rounded-md p-2">
+                </div>
+
+                <div>
+                    <label for="comments" class="block text-sm font-medium text-gray-700 mb-1">Evaluation Comments</label>
+                    <textarea id="comments" name="comments" rows="3" class="w-full border border-gray-300 rounded-md p-2"><%= existingEval ? existingEval.comments : '' %></textarea>
+                </div>
+
+                <% if (existingEval && existingEval.finalScore) { %>
+                    <div class="bg-gray-50 p-3 rounded text-center mb-4 border border-gray-200">
+                        <span class="text-sm text-gray-500 block uppercase tracking-wide">Current Final Score</span>
+                        <span class="text-2xl font-bold text-gray-900"><%= existingEval.finalScore %>/100</span>
+                    </div>
+                <% } %>
+
+                <div class="pt-4 border-t border-gray-200 flex flex-col gap-2">
+                    <button type="submit" name="action" value="save" class="w-full bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-md font-medium hover:bg-gray-50 transition-colors">Save Draft Score</button>
+                    <div class="flex gap-2">
+                        <button type="submit" name="action" value="reject" class="flex-1 bg-red-600 text-white px-4 py-2 rounded-md font-medium hover:bg-red-700 transition-colors">Reject</button>
+                        <button type="submit" name="action" value="shortlist" class="flex-1 bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 transition-colors">Shortlist</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

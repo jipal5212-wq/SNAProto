@@ -1,0 +1,45 @@
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">My Pilots</h1>
+    <p class="text-sm text-gray-500">Track active pilots where your solution is being tested.</p>
+</div>
+
+<% if (pilots.length === 0) { %>
+    <div class="bg-white p-8 rounded-lg border border-gray-200 text-center shadow-sm">
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No Active Pilots</h3>
+        <p class="text-gray-500 mb-4">You haven't been selected for any pilots yet.</p>
+    </div>
+<% } else { %>
+    <div class="bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pilot Objective</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <% pilots.forEach(pilot => { %>
+                    <tr>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900 line-clamp-1"><%= pilot.objective %></div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900"><%= pilot.department ? pilot.department.name : 'Unknown' %></div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                <%= pilot.status === 'ACTIVE' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800' %>">
+                                <%= pilot.status.replace(/_/g, ' ') %>
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <a href="/startup/pilots/<%= pilot._id %>" class="text-primary hover:text-blue-900">View Dashboard</a>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </div>
+<% } %>

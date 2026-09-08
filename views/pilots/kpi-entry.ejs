@@ -1,0 +1,43 @@
+<div class="mb-6">
+    <a href="/government/pilots/<%= pilot._id %>" class="text-sm text-primary hover:underline flex items-center gap-1 mb-4">
+        &larr; Back to Pilot Dashboard
+    </a>
+    <h1 class="text-2xl font-bold text-gray-900">Record KPI Data</h1>
+    <p class="text-gray-500 mt-1">Pilot: <span class="font-semibold"><%= pilot.objective %></span></p>
+</div>
+
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 max-w-2xl mx-auto">
+    <% if (pilot.kpis.length === 0) { %>
+        <p class="text-gray-500 italic">No KPIs found for this pilot.</p>
+    <% } else { %>
+        <form action="/government/pilots/<%= pilot._id %>/kpis" method="POST" class="space-y-6">
+            
+            <div>
+                <label for="kpiId" class="block text-sm font-medium text-gray-700 mb-1">Select KPI</label>
+                <select id="kpiId" name="kpiId" required class="w-full border border-gray-300 rounded-md p-2">
+                    <% pilot.kpis.forEach(kpi => { %>
+                        <option value="<%= kpi._id %>">
+                            <%= kpi.name %> (Baseline: <%= kpi.baseline %>, Target: <%= kpi.target %>)
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <div>
+                <label for="value" class="block text-sm font-medium text-gray-700 mb-1">Actual Recorded Value (Number) *</label>
+                <input type="number" step="any" id="value" name="value" required class="w-full border border-gray-300 rounded-md p-2">
+            </div>
+
+            <div>
+                <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Date of Measurement</label>
+                <input type="date" id="date" name="date" required class="w-full border border-gray-300 rounded-md p-2" value="<%= new Date().toISOString().split('T')[0] %>">
+            </div>
+
+            <div class="pt-4 border-t border-gray-200 flex justify-end">
+                <button type="submit" class="bg-primary text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors">
+                    Save KPI Record
+                </button>
+            </div>
+        </form>
+    <% } %>
+</div>

@@ -1,0 +1,81 @@
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Startup Profile</h1>
+    <p class="text-sm text-gray-500">Keep your profile updated for better AI-assisted matching with government challenges.</p>
+</div>
+
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <form action="/startup/profile" method="POST" class="p-6 space-y-6">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Startup Name *</label>
+                <input type="text" id="name" name="name" value="<%= startup ? startup.name : '' %>" required class="w-full border border-gray-300 rounded-md p-2">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="foundedYear" class="block text-sm font-medium text-gray-700 mb-1">Founded Year</label>
+                    <input type="number" id="foundedYear" name="foundedYear" value="<%= startup ? startup.foundedYear : '' %>" class="w-full border border-gray-300 rounded-md p-2">
+                </div>
+                <div>
+                    <label for="teamSize" class="block text-sm font-medium text-gray-700 mb-1">Team Size</label>
+                    <input type="text" id="teamSize" name="teamSize" value="<%= startup ? startup.teamSize : '' %>" placeholder="E.g., 10-50" class="w-full border border-gray-300 rounded-md p-2">
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Company Description</label>
+            <textarea id="description" name="description" rows="3" class="w-full border border-gray-300 rounded-md p-2"><%= startup ? startup.description : '' %></textarea>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="industries" class="block text-sm font-medium text-gray-700 mb-1">Industries (comma separated)</label>
+                <input type="text" id="industries" name="industries" value="<%= startup && startup.industries ? startup.industries.join(', ') : '' %>" placeholder="E.g., Healthcare, Transport" class="w-full border border-gray-300 rounded-md p-2">
+            </div>
+            <div>
+                <label for="stage" class="block text-sm font-medium text-gray-700 mb-1">Funding/Development Stage</label>
+                <input type="text" id="stage" name="stage" value="<%= startup ? startup.stage : '' %>" placeholder="E.g., Seed, Series A, Bootstrapped" class="w-full border border-gray-300 rounded-md p-2">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="technologies" class="block text-sm font-medium text-gray-700 mb-1">Core Technologies (comma separated)</label>
+                <input type="text" id="technologies" name="technologies" value="<%= startup && startup.technologies ? startup.technologies.join(', ') : '' %>" placeholder="E.g., AI, IoT, Computer Vision" class="w-full border border-gray-300 rounded-md p-2">
+            </div>
+            <div>
+                <label for="capabilities" class="block text-sm font-medium text-gray-700 mb-1">Capabilities (comma separated)</label>
+                <input type="text" id="capabilities" name="capabilities" value="<%= startup && startup.capabilities ? startup.capabilities.join(', ') : '' %>" placeholder="E.g., Route Optimization, Predictive Analytics" class="w-full border border-gray-300 rounded-md p-2">
+            </div>
+        </div>
+        
+        <div>
+            <label for="products" class="block text-sm font-medium text-gray-700 mb-1">Products / Solutions (comma separated)</label>
+            <input type="text" id="products" name="products" value="<%= startup && startup.products ? startup.products.join(', ') : '' %>" class="w-full border border-gray-300 rounded-md p-2">
+        </div>
+        
+        <div class="grid grid-cols-1 gap-6">
+            <div>
+                <label for="previousProjects" class="block text-sm font-medium text-gray-700 mb-1">Notable Previous Projects (comma separated)</label>
+                <input type="text" id="previousProjects" name="previousProjects" value="<%= startup && startup.previousProjects ? startup.previousProjects.join(', ') : '' %>" class="w-full border border-gray-300 rounded-md p-2">
+            </div>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-md border border-gray-200 flex items-start">
+            <div class="flex items-center h-5">
+                <input id="pilotReady" name="pilotReady" type="checkbox" <%= startup && startup.pilotReady ? 'checked' : '' %> class="focus:ring-primary h-4 w-4 text-primary border-gray-300 rounded">
+            </div>
+            <div class="ml-3 text-sm">
+                <label for="pilotReady" class="font-medium text-gray-900">Pilot Ready</label>
+                <p class="text-gray-500">We have a deployable solution ready to be piloted in a real-world environment.</p>
+            </div>
+        </div>
+
+        <div class="pt-4 border-t border-gray-200 flex justify-end">
+            <button type="submit" class="bg-primary text-white px-6 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors">
+                Save Profile
+            </button>
+        </div>
+    </form>
+</div>
