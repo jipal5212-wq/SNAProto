@@ -22,13 +22,16 @@ CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR", "./chroma_data")
 SQLITE_DB_PATH = os.getenv("SQLITE_DB_PATH", "./snap_rag.db")
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")
 
-# ── Scoring Weights ──────────────────────────────────────
+# ── Scoring Weights (8-Dimension Evaluation Framework) ───
 SCORING_WEIGHTS = {
-    "relevance": 0.30,
-    "feasibility": 0.25,
-    "innovation": 0.20,
-    "team_credibility": 0.15,
-    "pilot_readiness": 0.10,
+    "technical_fit": 0.25,        # Problem/Technical Fit (25%)
+    "expected_impact": 0.20,      # Expected Impact (20%)
+    "feasibility": 0.15,          # Feasibility of Implementation (15%)
+    "cost_effectiveness": 0.10,   # Cost Effectiveness (10%)
+    "scalability": 0.10,          # Scalability (10%)
+    "security_privacy": 0.10,     # Security & Data Privacy (10%)
+    "team_capability": 0.05,      # Startup Capability / Team (5%)
+    "innovation": 0.05,           # Innovation (5%)
 }
 
 # ── Ranking ───────────────────────────────────────────────

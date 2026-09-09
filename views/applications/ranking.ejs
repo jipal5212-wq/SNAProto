@@ -57,14 +57,50 @@
     <% } %>
 </div>
 
-<!-- Info banner -->
-<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-xs text-blue-900 flex flex-col md:flex-row md:items-center justify-between gap-3">
-    <div>
-        <span class="font-bold">Transparent Multi-Dimensional Scoring:</span>
-        Relevance (30%) + Feasibility (25%) + Innovation (20%) + Team Credibility (15%) + Pilot Readiness (10%) - Consistency Penalty.
+<!-- Info banner: 8-Dimension Evaluation Rubric -->
+<div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 mb-6 text-xs text-blue-950 shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-3">
+        <div class="font-bold text-sm text-blue-900 flex items-center gap-2">
+            <span>🏛️</span>
+            <span>Government Multi-Dimensional AI Procurement Rubric (100% Total)</span>
+        </div>
+        <div class="inline-flex items-center gap-1.5 bg-blue-100/80 text-blue-800 px-3 py-1 rounded-full font-semibold text-[11px]">
+            <span>✓ Logically Viable & Doable Filter Active</span>
+        </div>
     </div>
-    <div class="text-blue-700">
-        💡 Every score includes an explainable AI justification and consistency flags.
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2 border-t border-blue-200/60 text-[11px]">
+        <div class="bg-white/80 p-2 rounded border border-blue-100 shadow-2xs">
+            <span class="text-gray-500 block">Problem / Technical Fit</span>
+            <span class="font-bold text-blue-900">25% Weight</span>
+        </div>
+        <div class="bg-white/80 p-2 rounded border border-blue-100 shadow-2xs">
+            <span class="text-gray-500 block">Expected Impact</span>
+            <span class="font-bold text-blue-900">20% Weight</span>
+        </div>
+        <div class="bg-white/80 p-2 rounded border border-blue-100 shadow-2xs">
+            <span class="text-gray-500 block">Feasibility of Implementation</span>
+            <span class="font-bold text-blue-900">15% Weight</span>
+        </div>
+        <div class="bg-white/80 p-2 rounded border border-blue-100 shadow-2xs">
+            <span class="text-gray-500 block">Cost Effectiveness</span>
+            <span class="font-bold text-blue-900">10% Weight</span>
+        </div>
+        <div class="bg-white/80 p-2 rounded border border-blue-100 shadow-2xs">
+            <span class="text-gray-500 block">Scalability</span>
+            <span class="font-bold text-blue-900">10% Weight</span>
+        </div>
+        <div class="bg-white/80 p-2 rounded border border-blue-100 shadow-2xs">
+            <span class="text-gray-500 block">Security & Data Privacy</span>
+            <span class="font-bold text-blue-900">10% Weight</span>
+        </div>
+        <div class="bg-white/80 p-2 rounded border border-blue-100 shadow-2xs">
+            <span class="text-gray-500 block">Startup Capability / Team</span>
+            <span class="font-bold text-blue-900">5% Weight</span>
+        </div>
+        <div class="bg-white/80 p-2 rounded border border-blue-100 shadow-2xs">
+            <span class="text-gray-500 block">Innovation</span>
+            <span class="font-bold text-blue-900">5% Weight</span>
+        </div>
     </div>
 </div>
 
@@ -77,8 +113,9 @@
                     <th class="px-4 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider w-12">Rank</th>
                     <th class="px-4 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider">Startup & Proposal</th>
                     <th class="px-4 py-3 text-center font-semibold text-gray-600 uppercase tracking-wider">Statutory Eligibility</th>
-                    <th class="px-4 py-3 text-center font-semibold text-gray-600 uppercase tracking-wider">AI RAG Score (0-10)</th>
-                    <th class="px-4 py-3 text-center font-semibold text-gray-600 uppercase tracking-wider">Dimension Breakdown (1-5)</th>
+                    <th class="px-4 py-3 text-center font-semibold text-gray-600 uppercase tracking-wider">Viability / Doability</th>
+                    <th class="px-4 py-3 text-center font-semibold text-gray-600 uppercase tracking-wider">AI Score (0-10)</th>
+                    <th class="px-4 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider">8-Parameter Scoring (1-5)</th>
                     <th class="px-4 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider">Consistency Flags</th>
                     <th class="px-4 py-3 text-left font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                     <th class="px-4 py-3 text-right font-semibold text-gray-600 uppercase tracking-wider">Procurement Action</th>
@@ -115,7 +152,7 @@
                         <td class="px-4 py-4 text-center whitespace-nowrap">
                             <% if (app.ragEligible) { %>
                                 <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    ✓ Eligible
+                                    ✓ DPIIT Eligible
                                 </span>
                             <% } else { %>
                                 <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800" title="<%= app.ragEligibilityReason %>">
@@ -125,11 +162,24 @@
                             <% } %>
                         </td>
 
+                        <!-- Viability / Doability -->
+                        <td class="px-4 py-4 text-center whitespace-nowrap">
+                            <% if (app.ragIsDoable !== false) { %>
+                                <span class="px-2 py-0.5 inline-flex text-[11px] font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200" title="<%= app.ragDoabilityReason || 'Verified feasible' %>">
+                                    ✓ Doable
+                                </span>
+                            <% } else { %>
+                                <span class="px-2 py-0.5 inline-flex text-[11px] font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-200" title="<%= app.ragDoabilityReason %>">
+                                    ✕ Infeasible
+                                </span>
+                            <% } %>
+                        </td>
+
                         <!-- AI RAG Score -->
                         <td class="px-4 py-4 text-center whitespace-nowrap">
-                            <% if (app.ragScore !== null) { %>
+                            <% if (app.ragScore !== null && app.ragScore !== undefined) { %>
                                 <div class="inline-flex flex-col items-center">
-                                    <span class="text-base font-extrabold px-3 py-1 rounded-lg <%= app.ragScore >= 7.5 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : (app.ragScore >= 5.0 ? 'bg-blue-100 text-blue-800' : 'bg-rose-100 text-rose-800') %>">
+                                    <span class="text-base font-extrabold px-3 py-1 rounded-lg <%= app.ragScore >= 7.5 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : (app.ragScore >= 5.0 ? 'bg-blue-100 text-blue-800 border border-blue-200' : 'bg-rose-100 text-rose-800 border border-rose-200') %>">
                                         <%= app.ragScore %> / 10
                                     </span>
                                 </div>
@@ -138,38 +188,51 @@
                             <% } %>
                         </td>
 
-                        <!-- Dimension Breakdown -->
+                        <!-- 8-Parameter Breakdown -->
                         <td class="px-4 py-4">
-                            <% if (app.ragDimensions && app.ragDimensions.relevance) { %>
-                                <div class="space-y-1 w-48">
+                            <% const d = app.ragDimensions || {}; %>
+                            <% if (d.technicalFit || d.relevance) { %>
+                                <div class="w-64 space-y-1 bg-gray-50/70 p-2 rounded-lg border border-gray-100">
                                     <div class="flex justify-between text-[11px]">
-                                        <span class="text-gray-500">Relevance:</span>
-                                        <span class="font-bold text-gray-800"><%= app.ragDimensions.relevance %>/5</span>
+                                        <span class="text-gray-600">Technical Fit <span class="text-gray-400">(25%)</span>:</span>
+                                        <span class="font-bold text-gray-900"><%= d.technicalFit || d.relevance %>/5</span>
                                     </div>
                                     <div class="flex justify-between text-[11px]">
-                                        <span class="text-gray-500">Feasibility:</span>
-                                        <span class="font-bold text-gray-800"><%= app.ragDimensions.feasibility %>/5</span>
+                                        <span class="text-gray-600">Expected Impact <span class="text-gray-400">(20%)</span>:</span>
+                                        <span class="font-bold text-gray-900"><%= d.expectedImpact || d.relevance %>/5</span>
                                     </div>
                                     <div class="flex justify-between text-[11px]">
-                                        <span class="text-gray-500">Innovation:</span>
-                                        <span class="font-bold text-gray-800"><%= app.ragDimensions.innovation %>/5</span>
+                                        <span class="text-gray-600">Feasibility <span class="text-gray-400">(15%)</span>:</span>
+                                        <span class="font-bold text-gray-900"><%= d.feasibility %>/5</span>
                                     </div>
                                     <div class="flex justify-between text-[11px]">
-                                        <span class="text-gray-500">Team:</span>
-                                        <span class="font-bold text-gray-800"><%= app.ragDimensions.teamCredibility %>/5</span>
+                                        <span class="text-gray-600">Cost Effectiveness <span class="text-gray-400">(10%)</span>:</span>
+                                        <span class="font-bold text-gray-900"><%= d.costEffectiveness || d.feasibility %>/5</span>
                                     </div>
                                     <div class="flex justify-between text-[11px]">
-                                        <span class="text-gray-500">Pilot Ready:</span>
-                                        <span class="font-bold text-gray-800"><%= app.ragDimensions.pilotReadiness %>/5</span>
+                                        <span class="text-gray-600">Scalability <span class="text-gray-400">(10%)</span>:</span>
+                                        <span class="font-bold text-gray-900"><%= d.scalability || 3 %>/5</span>
+                                    </div>
+                                    <div class="flex justify-between text-[11px]">
+                                        <span class="text-gray-600">Security & Privacy <span class="text-gray-400">(10%)</span>:</span>
+                                        <span class="font-bold text-gray-900"><%= d.securityPrivacy || 4 %>/5</span>
+                                    </div>
+                                    <div class="flex justify-between text-[11px]">
+                                        <span class="text-gray-600">Team Capability <span class="text-gray-400">(5%)</span>:</span>
+                                        <span class="font-bold text-gray-900"><%= d.teamCapability || d.teamCredibility %>/5</span>
+                                    </div>
+                                    <div class="flex justify-between text-[11px]">
+                                        <span class="text-gray-600">Innovation <span class="text-gray-400">(5%)</span>:</span>
+                                        <span class="font-bold text-gray-900"><%= d.innovation %>/5</span>
                                     </div>
 
-                                    <!-- Justification trigger modal / details -->
+                                    <!-- Justification expander -->
                                     <% if (app.ragJustifications && Object.keys(app.ragJustifications).length > 0) { %>
-                                        <details class="mt-1 text-[10px] text-indigo-600 cursor-pointer">
+                                        <details class="mt-2 pt-1 border-t border-gray-200 text-[10px] text-indigo-600 cursor-pointer">
                                             <summary class="hover:underline font-semibold">View AI Justifications</summary>
-                                            <div class="mt-1 p-2 bg-gray-50 rounded border border-gray-200 text-gray-700 space-y-1">
+                                            <div class="mt-1 p-2 bg-white rounded border border-gray-200 text-gray-700 space-y-1.5 shadow-2xs">
                                                 <% for (const [dim, just] of Object.entries(app.ragJustifications)) { %>
-                                                    <div><strong><%= dim %>:</strong> <%= just %></div>
+                                                    <div><strong class="text-gray-900 capitalize"><%= dim.replace(/_/g, ' ') %>:</strong> <%= just %></div>
                                                 <% } %>
                                             </div>
                                         </details>

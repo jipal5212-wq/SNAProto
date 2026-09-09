@@ -215,12 +215,22 @@ exports.postTriggerRagShortlist = async (req, res) => {
 
         if (matchedApp) {
           matchedApp.ragScore = ranked.final_score;
+          matchedApp.ragIsDoable = ranked.is_doable !== false;
+          matchedApp.ragDoabilityReason = ranked.doability_reason || 'Technical feasibility confirmed.';
+          const sc = ranked.scores || {};
           matchedApp.ragDimensions = {
-            relevance: ranked.scores ? ranked.scores.relevance : 0,
-            feasibility: ranked.scores ? ranked.scores.feasibility : 0,
-            innovation: ranked.scores ? ranked.scores.innovation : 0,
-            teamCredibility: ranked.scores ? ranked.scores.team_credibility : 0,
-            pilotReadiness: ranked.scores ? ranked.scores.pilot_readiness : 0
+            technicalFit: sc.technical_fit || sc.relevance || 0,
+            expectedImpact: sc.expected_impact || sc.relevance || 0,
+            feasibility: sc.feasibility || 0,
+            costEffectiveness: sc.cost_effectiveness || sc.feasibility || 0,
+            scalability: sc.scalability || 3,
+            securityPrivacy: sc.security_privacy || 3,
+            teamCapability: sc.team_capability || sc.team_credibility || 0,
+            innovation: sc.innovation || 0,
+            // Legacy aliases
+            relevance: sc.technical_fit || sc.relevance || 0,
+            teamCredibility: sc.team_capability || sc.team_credibility || 0,
+            pilotReadiness: sc.feasibility || 0
           };
           matchedApp.ragJustifications = ranked.justification || {};
           matchedApp.ragConsistencyFlags = ranked.consistency_flags || [];

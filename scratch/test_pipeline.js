@@ -51,7 +51,13 @@ async function testFullPrototype() {
   const shortlist = await ragService.getShortlist(problemId, true);
   console.log(`   -> Ranked ${shortlist.ranked_solutions.length} solutions:`);
   shortlist.ranked_solutions.forEach((sol, i) => {
-    console.log(`      #${i + 1} ${sol.startup_name}: Score ${sol.final_score}/10 | Rel: ${sol.scores.relevance}/5, Feas: ${sol.scores.feasibility}/5, Inn: ${sol.scores.innovation}/5`);
+    const sc = sol.scores || {};
+    console.log(`      #${i + 1} ${sol.startup_name}: Score ${sol.final_score}/10 | Doable: ${sol.is_doable !== false ? 'YES' : 'NO'}`);
+    console.log(`         TechFit(25%): ${sc.problem_technical_fit}/5 | Impact(20%): ${sc.expected_impact}/5 | Feas(15%): ${sc.feasibility_of_implementation}/5`);
+    console.log(`         Cost(10%): ${sc.cost_effectiveness}/5 | Scale(10%): ${sc.scalability}/5 | Sec(10%): ${sc.security_data_privacy}/5 | Team(5%): ${sc.startup_capability_team}/5 | Innov(5%): ${sc.innovation}/5`);
+    if (sol.justification) {
+      console.log(`         TechFit Justification: ${sol.justification.problem_technical_fit || sol.justification.relevance}`);
+    }
   });
 
   // 6. Test Cross-Document ChromaDB Semantic Search

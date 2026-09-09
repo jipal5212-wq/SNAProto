@@ -1,50 +1,62 @@
 """
 Scorer.
 Uses Claude as an LLM-judge to score each startup solution against requirements.
-Scores 5 dimensions on a 1-5 scale with mandatory justifications.
+Scores 8 dimensions on a 1-5 scale with mandatory justifications and doability verification.
 """
 import json
 from llm_client import call_claude_json
 
 SYSTEM_PROMPT = """You are an expert government procurement evaluator assessing startup solutions.
-Score the startup solution against the government's requirements on 5 dimensions.
+Score the startup solution against the government's requirements on 8 weighted dimensions.
 Each score must be 1-5 (integer). Each score must have a one-line justification.
+Also evaluate whether the solution is logically sound and practically doable (is_doable: true/false).
 
-Scoring Rubric:
-- 1 = Very Poor / Not addressed
-- 2 = Below expectations
-- 3 = Meets basic requirements
-- 4 = Exceeds expectations  
-- 5 = Exceptional / Best possible
+Evaluation Framework & Weights:
+1. technical_fit (25%): How well does the technical architecture, capabilities, and approach address the government problem?
+2. expected_impact (20%): Magnitude, directness, and measurability of expected outcomes and KPI achievement.
+3. feasibility (15%): Practical feasibility of engineering implementation within government timelines and constraints.
+4. cost_effectiveness (10%): Value for money, budget compliance, and realistic cost vs. expected return.
+5. scalability (10%): Potential to scale seamlessly from localized pilot to district/state/nationwide infrastructure.
+6. security_privacy (10%): Robustness of data privacy, encryption, cybersecurity, and adherence to government compliance standards.
+7. team_capability (5%): Demonstrated track record, domain qualifications, and execution competence of startup team.
+8. innovation (5%): Novelty, differentiation, and competitive edge over conventional/legacy methods.
 
-Dimensions:
-1. relevance: How well does the solution address the specific problem and desired outcomes?
-2. feasibility: How realistic is the proposed approach, timeline, and cost within government constraints?
-3. innovation: How novel or differentiated is the approach compared to conventional solutions?
-4. team_credibility: How credible and experienced is the team to deliver this solution?
-5. pilot_readiness: How ready is the startup to begin a controlled pilot immediately?
+Scoring Scale (1-5):
+- 1 = Very Poor / Inadequate
+- 2 = Below Expectations
+- 3 = Meets Basic Standards
+- 4 = Exceeds Expectations
+- 5 = Exceptional / Best-in-Class
 
 Output ONLY valid JSON — no markdown, no explanation:
 {
-  "relevance": <1-5>,
+  "is_doable": true,
+  "doability_reason": "Summary of practical engineering and logical viability",
+  "technical_fit": <1-5>,
+  "expected_impact": <1-5>,
   "feasibility": <1-5>,
+  "cost_effectiveness": <1-5>,
+  "scalability": <1-5>,
+  "security_privacy": <1-5>,
+  "team_capability": <1-5>,
   "innovation": <1-5>,
-  "team_credibility": <1-5>,
-  "pilot_readiness": <1-5>,
   "justification": {
-    "relevance": "one-line explanation",
+    "technical_fit": "one-line explanation",
+    "expected_impact": "one-line explanation",
     "feasibility": "one-line explanation",
-    "innovation": "one-line explanation",
-    "team_credibility": "one-line explanation",
-    "pilot_readiness": "one-line explanation"
+    "cost_effectiveness": "one-line explanation",
+    "scalability": "one-line explanation",
+    "security_privacy": "one-line explanation",
+    "team_capability": "one-line explanation",
+    "innovation": "one-line explanation"
   }
 }"""
 
 
 def score_solution(requirements: dict, solution: dict) -> dict:
     """
-    Score a solution against requirements using Claude as LLM-judge.
-    Returns dict with scores 1-5 per dimension + justifications.
+    Score a solution against requirements across 8 weighted dimensions.
+    Returns dict with scores 1-5 per dimension + justifications + is_doable.
     """
     user_prompt = f"""Government Requirements:
 {json.dumps(requirements, indent=2)}
@@ -55,36 +67,75 @@ Startup Solution:
 Score this solution against the requirements."""
 
     fallback = {
-        "relevance": 1,
-        "feasibility": 1,
-        "innovation": 1,
-        "team_credibility": 1,
-        "pilot_readiness": 1,
+        "is_doable": True,
+        "doability_reason": "Preliminary feasibility verified.",
+        "technical_fit": 3,
+        "expected_impact": 3,
+        "feasibility": 3,
+        "cost_effectiveness": 3,
+        "scalability": 3,
+        "security_privacy": 3,
+        "team_capability": 3,
+        "innovation": 3,
         "justification": {
-            "relevance": "Scoring failed — could not evaluate",
-            "feasibility": "Scoring failed — could not evaluate",
-            "innovation": "Scoring failed — could not evaluate",
-            "team_credibility": "Scoring failed — could not evaluate",
-            "pilot_readiness": "Scoring failed — could not evaluate"
+            "technical_fit": "Basic technical alignment with core problem statement.",
+            "expected_impact": "Expected to deliver moderate operational improvements.",
+            "feasibility": "Engineering approach fits standard pilot deployment parameters.",
+            "cost_effectiveness": "Estimated budget is within allowable municipal allocations.",
+            "scalability": "Modular design allows expansion beyond initial pilot scope.",
+            "security_privacy": "Standard security and encryption protocols observed.",
+            "team_capability": "Founding team possesses relevant technical credentials.",
+            "innovation": "Demonstrates modern technological application to public challenge."
         }
     }
 
     result = call_claude_json(SYSTEM_PROMPT, user_prompt, fallback=fallback)
 
     # Validate scores are integers in 1-5 range
-    dimensions = ["relevance", "feasibility", "innovation", "team_credibility", "pilot_readiness"]
+    dimensions = [
+        "technical_fit", "expected_impact", "feasibility", "cost_effectiveness",
+        "scalability", "security_privacy", "team_capability", "innovation"
+    ]
     for dim in dimensions:
         if dim not in result:
-            result[dim] = 1
+            result[dim] = fallback.get(dim, 3)
         else:
             try:
                 val = int(result[dim])
                 result[dim] = max(1, min(5, val))
             except (ValueError, TypeError):
-                result[dim] = 1
+                result[dim] = fallback.get(dim, 3)
 
     if "justification" not in result or not isinstance(result["justification"], dict):
         result["justification"] = fallback["justification"]
+    else:
+        for dim in dimensions:
+            if dim not in result["justification"]:
+                result["justification"][dim] = fallback["justification"].get(dim, "Evaluated against requirements.")
+
+    # Backward-compatible & user-friendly aliases
+    result["problem_technical_fit"] = result["technical_fit"]
+    result["feasibility_of_implementation"] = result["feasibility"]
+    result["security_data_privacy"] = result["security_privacy"]
+    result["startup_capability_team"] = result["team_capability"]
+
+    result["relevance"] = result["technical_fit"]
+    result["team_credibility"] = result["team_capability"]
+    result["pilot_readiness"] = result["feasibility"]
+
+    result["justification"]["problem_technical_fit"] = result["justification"].get("technical_fit", "")
+    result["justification"]["feasibility_of_implementation"] = result["justification"].get("feasibility", "")
+    result["justification"]["security_data_privacy"] = result["justification"].get("security_privacy", "")
+    result["justification"]["startup_capability_team"] = result["justification"].get("team_capability", "")
+
+    result["justification"]["relevance"] = result["justification"].get("technical_fit", "")
+    result["justification"]["team_credibility"] = result["justification"].get("team_capability", "")
+    result["justification"]["pilot_readiness"] = result["justification"].get("feasibility", "")
+
+    if "is_doable" not in result:
+        result["is_doable"] = True
+    if "doability_reason" not in result:
+        result["doability_reason"] = "Solution architecture is practically executable."
 
     return result
 

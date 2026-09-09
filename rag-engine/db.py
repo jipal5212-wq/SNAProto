@@ -50,13 +50,19 @@ def init_db():
             pilot_readiness REAL,
             justification_json TEXT,
             final_score REAL,
+            scores_json TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (solution_id) REFERENCES solutions(id),
             FOREIGN KEY (problem_id) REFERENCES problems(id)
         );
     """)
+    try:
+        conn.execute("ALTER TABLE scores ADD COLUMN scores_json TEXT")
+    except Exception:
+        pass
     conn.commit()
     conn.close()
+
 
 # ── Problem CRUD ─────────────────────────────────────────
 
@@ -104,12 +110,13 @@ def insert_solution(problem_id: int, startup_name: str, filename: str,
     conn.close()
     return sid
 
-def get_solutions_for_problem(problem_id: int, eligible_only: bool = True) -> list[dict]:
+def get_solutions_for_problem(problem_id, eligible_only: bool = True) -> list[dict]:
     conn = get_connection()
+    pid = int(problem_id) if str(problem_id).isdigit() else problem_id
     query = "SELECT * FROM solutions WHERE problem_id = ?"
     if eligible_only:
         query += " AND eligible = 1"
-    rows = conn.execute(query, (problem_id,)).fetchall()
+    rows = conn.execute(query, (pid,)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
 
@@ -129,35 +136,49 @@ def insert_score(solution_id: int, problem_id: int, scores: dict,
     cur = conn.execute(
         """INSERT INTO scores
            (solution_id, problem_id, relevance, feasibility, innovation,
-            team_credibility, pilot_readiness, justification_json, final_score)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            team_credibility, pilot_readiness, justification_json, final_score, scores_json)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (solution_id, problem_id,
-         scores.get("relevance", 0), scores.get("feasibility", 0),
-         scores.get("innovation", 0), scores.get("team_credibility", 0),
-         scores.get("pilot_readiness", 0),
-         json.dumps(justification), final_score)
+         scores.get("technical_fit", scores.get("relevance", 0)),
+         scores.get("feasibility", 0),
+         scores.get("innovation", 0),
+         scores.get("team_capability", scores.get("team_credibility", 0)),
+         scores.get("feasibility", scores.get("pilot_readiness", 0)),
+         json.dumps(justification), final_score, json.dumps(scores))
     )
     sid = cur.lastrowid
     conn.commit()
     conn.close()
     return sid
 
-def get_scores_for_problem(problem_id: int) -> list[dict]:
+def get_scores_for_problem(problem_id) -> list[dict]:
     conn = get_connection()
+    pid = int(problem_id) if str(problem_id).isdigit() else problem_id
     rows = conn.execute(
         """SELECT sc.*, s.startup_name, s.filename, s.consistency_flags
            FROM scores sc
            JOIN solutions s ON sc.solution_id = s.id
            WHERE sc.problem_id = ?
            ORDER BY sc.final_score DESC""",
-        (problem_id,)
+        (pid,)
     ).fetchall()
     conn.close()
-    return [dict(r) for r in rows]
+    output = []
+    for r in rows:
+        item = dict(r)
+        if item.get("scores_json"):
+            try:
+                parsed = json.loads(item["scores_json"])
+                item.update(parsed)
+            except Exception:
+                pass
+        output.append(item)
+    return output
 
-def delete_scores_for_problem(problem_id: int):
+def delete_scores_for_problem(problem_id):
     """Clear existing scores before re-scoring."""
     conn = get_connection()
-    conn.execute("DELETE FROM scores WHERE problem_id = ?", (problem_id,))
+    pid = int(problem_id) if str(problem_id).isdigit() else problem_id
+    conn.execute("DELETE FROM scores WHERE problem_id = ?", (pid,))
     conn.commit()
     conn.close()

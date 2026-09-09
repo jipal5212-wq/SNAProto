@@ -280,37 +280,89 @@ async function getShortlist(rescore) {
 }
 
 function buildRankTable(solutions) {
-    let html = `<table>
-        <tr>
-            <th>#</th><th>Startup</th><th>Score</th>
-            <th>Relevance</th><th>Feasibility</th><th>Innovation</th>
-            <th>Team</th><th>Pilot</th><th>Flags</th><th>Justifications</th>
-        </tr>`;
+    let html = `
+        <div style="margin-bottom:1rem;padding:0.75rem;background:#1e293b;border-radius:8px;border:1px solid #334155;font-size:0.85rem">
+            <div style="font-weight:600;margin-bottom:0.4rem;color:#f8fafc">⚖️ Official 8-Parameter Evaluation Framework (100% Total):</div>
+            <div style="display:flex;flex-wrap:wrap;gap:0.75rem;color:#cbd5e1">
+                <span>🎯 Tech Fit (25%)</span>
+                <span>📈 Impact (20%)</span>
+                <span>⚙️ Feasibility (15%)</span>
+                <span>💰 Cost (10%)</span>
+                <span>🚀 Scalability (10%)</span>
+                <span>🔒 Security (10%)</span>
+                <span>👥 Team (5%)</span>
+                <span>💡 Innovation (5%)</span>
+            </div>
+        </div>
+        <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Startup</th>
+                <th>Score</th>
+                <th>Doability</th>
+                <th>Tech Fit<br><small style="color:#94a3b8">25%</small></th>
+                <th>Impact<br><small style="color:#94a3b8">20%</small></th>
+                <th>Feasibility<br><small style="color:#94a3b8">15%</small></th>
+                <th>Cost<br><small style="color:#94a3b8">10%</small></th>
+                <th>Scale<br><small style="color:#94a3b8">10%</small></th>
+                <th>Security<br><small style="color:#94a3b8">10%</small></th>
+                <th>Team<br><small style="color:#94a3b8">5%</small></th>
+                <th>Innov.<br><small style="color:#94a3b8">5%</small></th>
+                <th>Flags / Penalties</th>
+                <th>AI Justification</th>
+            </tr>
+        </thead>
+        <tbody>`;
     solutions.forEach(s => {
         const sc = s.final_score;
         const cls = sc >= 7 ? 'score-high' : sc >= 4 ? 'score-mid' : 'score-low';
         const flags = (s.consistency_flags || []).map(f => `<span class="flag">${f}</span>`).join(' ') || '—';
         const just = s.justification || {};
-        const justHtml = Object.entries(just).map(([k,v]) => `<strong>${k}:</strong> ${v}`).join('<br>');
+        const justHtml = Object.entries(just).map(([k,v]) => `<strong>${k.replace(/_/g, ' ')}:</strong> ${v}`).join('<br>');
+        
+        const isDoable = s.is_doable !== false;
+        const doabilityBadge = isDoable 
+            ? `<span class="score-badge score-high" title="Solution is technically & logically feasible">✓ Doable</span>`
+            : `<span class="score-badge score-low" title="${s.doability_reason || 'Infeasible'}">✕ Infeasible</span>`;
+
+        const scores = s.scores || {};
+        const techFit = scores.problem_technical_fit ?? scores.relevance ?? 0;
+        const impact = scores.expected_impact ?? scores.impact ?? 0;
+        const feasibility = scores.feasibility_of_implementation ?? scores.feasibility ?? 0;
+        const cost = scores.cost_effectiveness ?? scores.cost ?? 0;
+        const scalability = scores.scalability ?? 0;
+        const security = scores.security_data_privacy ?? scores.security ?? 0;
+        const team = scores.startup_capability_team ?? scores.team_credibility ?? 0;
+        const innovation = scores.innovation ?? 0;
 
         html += `<tr>
-            <td>${s.rank}</td>
-            <td><strong>${s.startup_name}</strong><br><small>${s.filename}</small></td>
+            <td><strong>#${s.rank}</strong></td>
+            <td><strong>${s.startup_name}</strong><br><small style="color:#64748b">${s.filename || ''}</small></td>
             <td><span class="score-badge ${cls}">${sc}/10</span></td>
-            <td>${scoreBadge(s.scores.relevance)}</td>
-            <td>${scoreBadge(s.scores.feasibility)}</td>
-            <td>${scoreBadge(s.scores.innovation)}</td>
-            <td>${scoreBadge(s.scores.team_credibility)}</td>
-            <td>${scoreBadge(s.scores.pilot_readiness)}</td>
-            <td>${flags}${s.penalty_applied > 0 ? `<br><small>-${s.penalty_applied} penalty</small>` : ''}</td>
-            <td class="justification">${justHtml || '—'}</td>
+            <td>${doabilityBadge}</td>
+            <td>${scoreBadge(techFit)}</td>
+            <td>${scoreBadge(impact)}</td>
+            <td>${scoreBadge(feasibility)}</td>
+            <td>${scoreBadge(cost)}</td>
+            <td>${scoreBadge(scalability)}</td>
+            <td>${scoreBadge(security)}</td>
+            <td>${scoreBadge(team)}</td>
+            <td>${scoreBadge(innovation)}</td>
+            <td>
+                ${flags}
+                ${s.penalty_applied > 0 ? `<br><small style="color:#f87171">-${s.penalty_applied} penalty</small>` : ''}
+                ${!isDoable ? `<br><small style="color:#f87171">(-3.0 infeasible)</small>` : ''}
+            </td>
+            <td class="justification" style="max-width:280px;line-height:1.35">${justHtml || '—'}</td>
         </tr>`;
     });
-    html += '</table>';
+    html += '</tbody></table>';
     return html;
 }
 
 function scoreBadge(val) {
+    val = Number(val || 0);
     const cls = val >= 4 ? 'score-high' : val >= 3 ? 'score-mid' : 'score-low';
     return `<span class="score-badge ${cls}">${val}/5</span>`;
 }

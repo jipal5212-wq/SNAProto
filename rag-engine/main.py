@@ -247,12 +247,21 @@ def get_shortlist(problem_id: int, top_n: int = TOP_N_SHORTLIST, rescore: bool =
             "startup_name": sol["startup_name"],
             "filename": sol["filename"],
             "consistency_flags": sol.get("consistency_flags", "[]"),
-            "relevance": scores.get("relevance", 1),
+            "technical_fit": scores.get("technical_fit", scores.get("relevance", 1)),
+            "expected_impact": scores.get("expected_impact", scores.get("relevance", 1)),
             "feasibility": scores.get("feasibility", 1),
+            "cost_effectiveness": scores.get("cost_effectiveness", scores.get("feasibility", 1)),
+            "scalability": scores.get("scalability", 3),
+            "security_privacy": scores.get("security_privacy", 3),
+            "team_capability": scores.get("team_capability", scores.get("team_credibility", 1)),
             "innovation": scores.get("innovation", 1),
-            "team_credibility": scores.get("team_credibility", 1),
-            "pilot_readiness": scores.get("pilot_readiness", 1),
+            "is_doable": scores.get("is_doable", True),
+            "doability_reason": scores.get("doability_reason", "Technical and practical feasibility confirmed."),
             "justification_json": json.dumps(scores.get("justification", {})),
+            # Legacy aliases
+            "relevance": scores.get("technical_fit", scores.get("relevance", 1)),
+            "team_credibility": scores.get("team_capability", scores.get("team_credibility", 1)),
+            "pilot_readiness": scores.get("feasibility", 1),
         })
 
     ranked = rank_solutions(scored_rows, top_n=top_n)

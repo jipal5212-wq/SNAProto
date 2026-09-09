@@ -51,63 +51,113 @@ def _heuristic_extract(system_prompt: str, user_prompt: str, fallback: dict) -> 
         pilot_str = str(solution_data.get("pilot_readiness", "")).lower()
         tech_list = [str(t).lower() for t in solution_data.get("tech_stack", [])]
 
-        # 1. Relevance: check alignment with domain & criteria
-        relevance = 4
-        if any(w in text for w in ["iot", "acoustic", "satellite", "radar", "ai/ml", "cnn", "sensor", "telemetry", "drone"]):
-            relevance = 5
-        if "conventional" in text or "excavation" in text:
-            relevance = 2
+        # 1. Problem / Technical Fit (25%)
+        technical_fit = 4
+        if any(w in text for w in ["iot", "acoustic", "satellite", "radar", "ai/ml", "cnn", "sensor", "telemetry", "drone", "scada"]):
+            technical_fit = 5
+        if "conventional" in text or "excavation" in text or "manual inspection" in text:
+            technical_fit = 2
 
-        # 2. Feasibility: check budget compliance
+        # 2. Expected Impact (20%)
+        expected_impact = 4
+        if any(w in text for w in ["30%", "40%", "reduction", "real-time alert", "prevent", "saving", "high accuracy"]):
+            expected_impact = 5
+        if "minimal impact" in text or "negligible" in text:
+            expected_impact = 2
+
+        # 3. Feasibility of Implementation (15%)
         feasibility = 4
-        if any(w in cost_str for w in ["45 lakh", "35 lakh", "25 lakh", "50 lakh"]):
+        if "30 days" in pilot_str or "ready" in pilot_str or "trl 8" in trl_str or "trl 9" in trl_str:
             feasibility = 5
-        elif any(w in cost_str for w in ["1.2 crore", "1.5 crore", "2 crore"]):
-            feasibility = 4
-        elif any(w in cost_str for w in ["10 crore", "45 crore", "850 crore"]):
+        elif "prototype" in pilot_str or "trl 4" in trl_str or "needs funding" in pilot_str:
+            feasibility = 2
+        elif any(w in cost_str for w in ["45 crore", "850 crore"]):
             feasibility = 1
 
-        # 3. Innovation: differentiated technology novelty
+        # 4. Cost Effectiveness (10%)
+        cost_effectiveness = 4
+        if any(w in cost_str for w in ["45 lakh", "35 lakh", "25 lakh", "50 lakh"]):
+            cost_effectiveness = 5
+        elif any(w in cost_str for w in ["1.2 crore", "1.5 crore", "2 crore"]):
+            cost_effectiveness = 4
+        elif any(w in cost_str for w in ["10 crore", "45 crore", "850 crore"]):
+            cost_effectiveness = 1
+
+        # 5. Scalability (10%)
+        scalability = 4
+        if any(w in text for w in ["cloud", "mqtt", "satellite", "distributed", "saas", "api", "multi-city"]):
+            scalability = 5
+        if "hardware-locked" in text or "manual tethering" in text:
+            scalability = 2
+
+        # 6. Security & Data Privacy (10%)
+        security_privacy = 4
+        if any(w in text for w in ["encryption", "tls", "scada", "iso", "on-prem", "cert-in", "privacy", "secure"]):
+            security_privacy = 5
+
+        # 7. Startup Capability / Team (5%)
+        team_capability = 3
+        if any(w in team_str for w in ["isro", "iit", "phd", "municipal", "10+ years", "12 engineers"]):
+            team_capability = 5
+        elif any(w in team_str for w in ["experienced", "engineers", "alumni", "5 years"]):
+            team_capability = 4
+        elif any(w in team_str for w in ["intern", "student", "early stage"]):
+            team_capability = 2
+
+        # 8. Innovation (5%)
         innovation = 3
-        if any(w in text for w in ["synthetic aperture radar", "sar", "satellite", "quantum", "patented"]):
+        if any(w in text for w in ["synthetic aperture radar", "sar", "satellite", "quantum", "patented", "edge ai"]):
             innovation = 5
-        elif any(w in text for w in ["acoustic", "edge ai", "computer vision", "neural network", "esp32", "mqtt"]):
+        elif any(w in text for w in ["acoustic", "computer vision", "neural network", "esp32", "mqtt"]):
             innovation = 4
         elif "conventional" in text or "manual" in text or "excavation" in text:
             innovation = 2
 
-        # 4. Team Credibility: background and track record
-        team = 3
-        if any(w in team_str for w in ["isro", "iit", "phd", "municipal", "10+ years", "12 engineers"]):
-            team = 5
-        elif any(w in team_str for w in ["experienced", "engineers", "alumni", "5 years"]):
-            team = 4
-        elif any(w in team_str for w in ["intern", "student", "early stage"]):
-            team = 2
+        # Logical and Technical Feasibility / Doability Gate
+        unviable_flags = []
+        if any(w in text for w in ["perpetual motion", "zero-point", "telepathy", "telepathic", "laws of thermodynamics"]):
+            unviable_flags.append("Violates fundamental scientific principles or relies on unproven speculative mechanisms.")
+        if "850 crore" in text and "startup" in text:
+            unviable_flags.append("Cost and turnover exceed statutory startup procurement thresholds.")
+        if any(w in trl_str for w in ["trl 1", "trl 2", "concept stage"]) and any(w in text for w in ["immediate", "ready to deploy", "operational"]):
+            unviable_flags.append("Early stage TRL 1-2 concept cannot be immediately deployed into production municipal operations.")
+        if feasibility < 2:
+            unviable_flags.append("Implementation approach lacks critical technical prerequisites.")
 
-        # 5. Pilot Readiness: TRL and readiness timeline
-        pilot = 3
-        if "trl 8" in trl_str or "trl 9" in trl_str or "30 days" in pilot_str or "operational" in pilot_str:
-            pilot = 5
-        elif "trl 7" in trl_str or "60 days" in pilot_str:
-            pilot = 4
-        elif "trl 5" in trl_str or "trl 6" in trl_str:
-            pilot = 3
-        elif "prototype" in pilot_str or "not ready" in pilot_str:
-            pilot = 2
+        is_doable = len(unviable_flags) == 0
+        if is_doable:
+            doability_reason = f"Technical architecture and deployment requirements for {startup_name} are verified as practically executable."
+        else:
+            doability_reason = " ".join(unviable_flags)
 
         return {
-            "relevance": relevance,
+            "is_doable": is_doable,
+            "doability_reason": doability_reason,
+            "technical_fit": technical_fit,
+            "expected_impact": expected_impact,
             "feasibility": feasibility,
+            "cost_effectiveness": cost_effectiveness,
+            "scalability": scalability,
+            "security_privacy": security_privacy,
+            "team_capability": team_capability,
             "innovation": innovation,
-            "team_credibility": team,
-            "pilot_readiness": pilot,
+            # Backward-compatible mappings
+            "relevance": technical_fit,
+            "team_credibility": team_capability,
+            "pilot_readiness": feasibility,
             "justification": {
-                "relevance": f"{startup_name} technology architecture demonstrates direct capability alignment with the problem's functional requirements.",
-                "feasibility": f"Cost estimate ({solution_data.get('cost_estimate', 'standard pilot pricing')}) and deployment plan fit within allowable municipal funding constraints.",
-                "innovation": f"Leverages differentiated {', '.join(solution_data.get('tech_stack', ['advanced tech'])[:3])} architecture compared to conventional methods.",
-                "team_credibility": f"Engineering background and qualifications ({solution_data.get('team_experience', 'proven domain expertise')}) support delivery execution.",
-                "pilot_readiness": f"Demonstrated maturity level ({solution_data.get('trl_level', 'TRL validated')}) confirms capability to deploy pilot within operational timelines."
+                "technical_fit": f"{startup_name} technology architecture demonstrates direct capability alignment with the problem's functional requirements.",
+                "expected_impact": "Projected outcomes directly target required efficiency gains and measurable KPI improvements.",
+                "feasibility": f"Engineering approach, TRL maturity ({solution_data.get('trl_level', 'Demonstrated')}), and timeline fit within pilot parameters.",
+                "cost_effectiveness": f"Budget estimate ({solution_data.get('cost_estimate', 'competitive pilot pricing')}) demonstrates clear value for municipal expenditure.",
+                "scalability": "Software and sensor architecture supports expansion across wider geographical and municipal zones.",
+                "security_privacy": "Adheres to standard government data telemetry security, access control, and privacy protections.",
+                "team_capability": f"Founding credentials and engineering track record ({solution_data.get('team_experience', 'proven domain expertise')}) assure delivery.",
+                "innovation": f"Leverages differentiated {', '.join(solution_data.get('tech_stack', ['advanced tech'])[:3])} capabilities compared to conventional methods.",
+                # Legacy aliases
+                "relevance": f"{startup_name} technology architecture demonstrates direct capability alignment.",
+                "team_credibility": f"Founding credentials ({solution_data.get('team_experience', 'domain expertise')}) assure delivery.",
+                "pilot_readiness": f"Demonstrated maturity level ({solution_data.get('trl_level', 'TRL validated')}) confirms pilot readiness."
             }
         }
 

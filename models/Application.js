@@ -19,17 +19,33 @@ const applicationSchema = new mongoose.Schema({
   ragEligibilityReason: { type: String },
   ragConsistencyFlags: [{ type: String }],
   ragScore: { type: Number },
+  ragIsDoable: { type: Boolean, default: true },
+  ragDoabilityReason: { type: String },
   ragDimensions: {
-    relevance: { type: Number },
+    technicalFit: { type: Number },
+    expectedImpact: { type: Number },
     feasibility: { type: Number },
+    costEffectiveness: { type: Number },
+    scalability: { type: Number },
+    securityPrivacy: { type: Number },
+    teamCapability: { type: Number },
     innovation: { type: Number },
+    // Legacy fields
+    relevance: { type: Number },
     teamCredibility: { type: Number },
     pilotReadiness: { type: Number }
   },
   ragJustifications: {
-    relevance: { type: String },
+    technicalFit: { type: String },
+    expectedImpact: { type: String },
     feasibility: { type: String },
+    costEffectiveness: { type: String },
+    scalability: { type: String },
+    securityPrivacy: { type: String },
+    teamCapability: { type: String },
     innovation: { type: String },
+    // Legacy fields
+    relevance: { type: String },
     teamCredibility: { type: String },
     pilotReadiness: { type: String }
   }
