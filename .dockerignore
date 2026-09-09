@@ -5,6 +5,9 @@ node_modules
 chroma_data
 rag-engine/chroma_data
 rag-engine/uploads
+rag-engine/snap_rag.db
+rag-engine/__pycache__
+rag-engine/**/__pycache__
 scratch/
 test_startup_proposals/
 *.log

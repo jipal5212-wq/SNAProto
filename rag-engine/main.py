@@ -340,6 +340,15 @@ def delete_problem(problem_id: int):
     return {"status": "deleted", "problem_id": problem_id}
 
 
+# ── Health Check ─────────────────────────────────────────
+
+@app.get("/health")
+@app.get("/rag/health")
+def health_check():
+    """Health check endpoint for Render and load balancers."""
+    return {"status": "ok", "service": "SNAP RAG Engine", "version": "1.0.0"}
+
+
 # ── Helpers ───────────────────────────────────────────────
 
 def _quick_dpiit_scan(text: str) -> bool:

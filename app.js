@@ -91,6 +91,11 @@ app.use('/', evaluationRoutes);
 app.use('/', pilotRoutes);
 app.use('/', dashboardRoutes);
 
+// ── Health check (for Render / load balancers) ───────────
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', service: 'SNAP GovTech Platform', version: '1.0.0' });
+});
+
 // Serve standalone RAG Engine frontend on the public web
 app.get('/rag', (req, res) => {
   res.sendFile(path.join(__dirname, 'rag-engine', 'frontend', 'index.html'));

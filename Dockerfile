@@ -39,15 +39,22 @@ RUN npm ci --omit=dev --legacy-peer-deps
 # 3. Copy application source code
 COPY . .
 
-# Ensure storage directories exist with correct write permissions
-RUN mkdir -p /app/rag-engine/uploads /app/rag-engine/chroma_data /app/public/uploads
+# Ensure writable storage directories for uploads, vector DB, SQLite
+# /data is mounted as a persistent disk on Render; fall back to /app/data locally
+RUN mkdir -p /data/uploads /data/chroma_data /app/rag-engine/uploads /app/public/uploads
+
+# Set env defaults for paths (overridden by render.yaml env vars in prod)
+ENV CHROMA_PERSIST_DIR=/data/chroma_data
+ENV SQLITE_DB_PATH=/data/snap_rag.db
+ENV UPLOAD_DIR=/data/uploads
+ENV PYTHON_PATH=/opt/venv/bin/python
 
 # Expose Node.js application port (which auto-manages port 8000 internally)
 EXPOSE 5000
 
-# Health check to ensure service is healthy
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:5000/ || exit 1
+# Health check — Express app must respond within 60s of container start
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+  CMD curl -f http://localhost:5000/health || exit 1
 
-# Launch the unified application
+# Launch the unified application (Node.js starts FastAPI as a subprocess)
 CMD ["npm", "start"]

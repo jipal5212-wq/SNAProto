@@ -5,14 +5,29 @@ services:
     plan: free
     region: oregon
     dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: "5000"
       - key: SESSION_SECRET
         generateValue: true
       - key: MONGODB_URI
+        sync: false
+      - key: ANTHROPIC_API_KEY
         sync: false
       - key: PYTHON_PATH
         value: /opt/venv/bin/python
       - key: RAG_ENGINE_URL
         value: http://127.0.0.1:8000
+      - key: CHROMA_PERSIST_DIR
+        value: /data/chroma_data
+      - key: SQLITE_DB_PATH
+        value: /data/snap_rag.db
+      - key: UPLOAD_DIR
+        value: /data/uploads
+    disk:
+      name: snap-data
+      mountPath: /data
+      sizeGB: 1
