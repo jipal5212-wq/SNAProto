@@ -91,9 +91,36 @@ app.use('/', evaluationRoutes);
 app.use('/', pilotRoutes);
 app.use('/', dashboardRoutes);
 
-// Unified RAG routes
-app.get('/rag', (req, res) => res.redirect('http://127.0.0.1:8000'));
-app.get('/rag/docs', (req, res) => res.redirect('http://127.0.0.1:8000/docs'));
+// Serve standalone RAG Engine frontend on the public web
+app.get('/rag', (req, res) => {
+  res.sendFile(path.join(__dirname, 'rag-engine', 'frontend', 'index.html'));
+});
+
+// Proxy RAG API requests to internal FastAPI microservice
+const ragBaseUrl = process.env.RAG_ENGINE_URL || 'http://127.0.0.1:8000';
+app.all(['/problem', '/startup/upload', '/shortlist', '/shortlist/*', '/search'], async (req, res) => {
+  try {
+    const targetUrl = `${ragBaseUrl}${req.originalUrl}`;
+    const headers = { ...req.headers };
+    delete headers.host;
+    
+    const fetchOptions = {
+      method: req.method,
+      headers: headers
+    };
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      fetchOptions.body = req;
+      fetchOptions.duplex = 'half';
+    }
+    const response = await fetch(targetUrl, fetchOptions);
+    res.status(response.status);
+    response.headers.forEach((v, k) => res.setHeader(k, v));
+    const data = await response.arrayBuffer();
+    res.send(Buffer.from(data));
+  } catch (err) {
+    res.status(502).json({ error: 'RAG Microservice Gateway Error: ' + err.message });
+  }
+});
 
 app.get('/', (req, res) => {
   res.render('layouts/main', { body: 'partials/home' });
@@ -112,7 +139,7 @@ function ensureRagEngine() {
       const ragDir = path.join(__dirname, 'rag-engine');
       const defaultWinPython = 'C:\\Users\\ASHISH KUMAR PAL\\AppData\\Local\\Python\\bin\\python.exe';
       const pythonExecutable = process.env.PYTHON_PATH || 
-        (process.platform === 'win32' ? defaultWinPython : 'python3');
+        (process.platform === 'win32' ? defaultWinPython : '/opt/venv/bin/python');
       
       const pyProc = spawn(pythonExecutable, ['-m', 'uvicorn', 'main:app', '--host', '0.0.0.0', '--port', '8000'], {
         cwd: ragDir,
@@ -121,7 +148,7 @@ function ensureRagEngine() {
       });
 
       pyProc.on('error', (err) => {
-        console.warn('⚠️ Primary python spawn failed, falling back to "python":', err.message);
+        console.warn('⚠️ Primary python spawn failed, falling back to "python3":', err.message);
         spawn(process.platform === 'win32' ? 'python' : 'python3', ['-m', 'uvicorn', 'main:app', '--host', '0.0.0.0', '--port', '8000'], {
           cwd: ragDir,
           stdio: 'inherit',
@@ -134,10 +161,10 @@ function ensureRagEngine() {
   }).catch(() => {});
 }
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`====================================================`);
-  console.log(` SNAP GovTech Platform active on http://localhost:${PORT}`);
-  console.log(` AI RAG Microservice available on http://localhost:8000`);
+  console.log(` SNAP GovTech Platform active on http://0.0.0.0:${PORT}`);
+  console.log(` AI RAG Microservice available on port 8000`);
   console.log(`====================================================`);
   ensureRagEngine();
 });
