@@ -64,8 +64,18 @@ if (process.env.MONGODB_URI && !process.env.MONGODB_URI.includes('localhost')) {
 
 app.use(session(sessionOptions));
 
-// Global variables for views
+// Global variables for views & serverless cookie session restoration
 app.use((req, res, next) => {
+  if (!req.session.user) {
+    const cookieHeader = req.headers.cookie || '';
+    const match = cookieHeader.match(/snap_user_payload=([^;]+)/);
+    if (match) {
+      try {
+        const decoded = Buffer.from(decodeURIComponent(match[1]), 'base64').toString('utf8');
+        req.session.user = JSON.parse(decoded);
+      } catch (_) {}
+    }
+  }
   res.locals.user = req.session.user || null;
   res.locals.error = req.session.error || null;
   res.locals.success = req.session.success || null;
