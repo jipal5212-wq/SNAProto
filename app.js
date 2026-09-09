@@ -98,7 +98,7 @@ app.get('/rag', (req, res) => {
 
 // Proxy RAG API requests to internal FastAPI microservice
 const ragBaseUrl = process.env.RAG_ENGINE_URL || 'http://127.0.0.1:8000';
-app.all(['/problem', '/startup/upload', '/shortlist', '/shortlist/*', '/search'], async (req, res) => {
+app.all(/^\/(problem|startup\/upload|shortlist|search)/, async (req, res) => {
   try {
     const targetUrl = `${ragBaseUrl}${req.originalUrl}`;
     const headers = { ...req.headers };
