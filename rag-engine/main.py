@@ -289,12 +289,13 @@ def get_all_solutions(problem_id: int):
 
 
 @app.get("/search")
-def semantic_search(query: str, problem_id: int, top_k: int = 10):
+def semantic_search(query: str, problem_id: Optional[str] = None, top_k: int = 10):
     """
-    Cross-document semantic search across all indexed solutions for a problem.
+    Cross-document semantic search across indexed solutions.
+    Supports specific problem_id (int or string) or searches all indexed problems if omitted.
     Example: /search?query=IoT+sensors&problem_id=1
     """
-    if not query.strip():
+    if not query or not query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
 
     results = search_solutions(problem_id=problem_id, query=query, top_k=top_k)

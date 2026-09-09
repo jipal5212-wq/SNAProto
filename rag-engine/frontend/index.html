@@ -139,8 +139,8 @@
     <div class="card">
         <h2>🔍 Semantic Search Across Solutions</h2>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
-            <input type="text" id="searchProblemId" placeholder="Problem ID" style="max-width:120px" />
-            <input type="text" id="searchQuery" placeholder="Search query (e.g. IoT sensors)" style="flex:1;min-width:200px" />
+            <input type="text" id="searchProblemId" placeholder="Problem ID (optional)" style="max-width:160px" />
+            <input type="text" id="searchQuery" placeholder="Search query (e.g. IoT sensors, radar, drone)" style="flex:1;min-width:200px" />
             <button class="btn btn-primary" onclick="doSearch()">Search</button>
         </div>
         <div id="searchResults" style="margin-top:0.75rem"></div>
@@ -319,15 +319,16 @@ async function doSearch() {
     const pid = document.getElementById('searchProblemId').value.trim();
     const q = document.getElementById('searchQuery').value.trim();
     const el = document.getElementById('searchResults');
-    if (!pid || !q) { el.innerHTML = '<div class="status status-err">Enter problem ID and query.</div>'; return; }
+    if (!q) { el.innerHTML = '<div class="status status-err">Enter a search query.</div>'; return; }
 
     el.innerHTML = '<span class="spinner"></span> Searching...';
     try {
-        const res = await fetch(API + `/search?query=${encodeURIComponent(q)}&problem_id=${pid}&top_k=10`);
+        const paramStr = pid ? `query=${encodeURIComponent(q)}&problem_id=${encodeURIComponent(pid)}&top_k=10` : `query=${encodeURIComponent(q)}&top_k=10`;
+        const res = await fetch(API + `/search?${paramStr}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Failed');
         if (!data.results || data.results.length === 0) {
-            el.innerHTML = '<div class="status status-info">No results found.</div>';
+            el.innerHTML = '<div class="status status-info">No matching solution passages found.</div>';
             return;
         }
         el.innerHTML = data.results.map(r =>

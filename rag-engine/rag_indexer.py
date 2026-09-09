@@ -10,6 +10,7 @@ from chromadb.config import Settings
 import hashlib
 import math
 import numpy as np
+from typing import Optional, Union
 from sentence_transformers import SentenceTransformer
 from config import CHROMA_PERSIST_DIR, EMBEDDING_MODEL, CHUNK_SIZE, CHUNK_OVERLAP
 
@@ -62,7 +63,7 @@ def _get_chroma_client() -> chromadb.PersistentClient:
     return _chroma_client
 
 
-def _get_collection(problem_id: int):
+def _get_collection(problem_id: Union[int, str]):
     """Get or create a ChromaDB collection for a problem."""
     client = _get_chroma_client()
     collection_name = f"problem_{problem_id}"
@@ -143,37 +144,80 @@ def index_solution(problem_id: int, solution_id: int, startup_name: str, doc_tex
     print(f"[RAG] Indexed {len(chunks)} chunks for '{startup_name}' (solution_id={solution_id})")
 
 
-def search_solutions(problem_id: int, query: str, top_k: int = 10) -> list[dict]:
+def search_solutions(problem_id: Optional[Union[int, str]] = None, query: str = "", top_k: int = 10) -> list[dict]:
     """
-    Semantic search across all indexed solutions for a problem.
-    Returns list of {startup_name, solution_id, chunk, score}.
+    Semantic search across indexed solutions.
+    If problem_id is provided and its collection has documents, searches that problem's collection.
+    If problem_id is None, empty, or its collection is empty, searches all indexed collections.
+    Gracefully handles empty collections without throwing ChromaError.
     """
-    model = _get_embedding_model()
-    collection = _get_collection(problem_id)
+    if not query or not query.strip():
+        return []
 
+    model = _get_embedding_model()
+    client = _get_chroma_client()
     query_embedding = model.encode([query], show_progress_bar=False).tolist()
 
-    results = collection.query(
-        query_embeddings=query_embedding,
-        n_results=min(top_k, collection.count() or 1),
-        include=["documents", "metadatas", "distances"]
-    )
+    collections_to_search = []
 
-    output = []
-    if results and results["documents"]:
-        for doc, meta, dist in zip(
-            results["documents"][0],
-            results["metadatas"][0],
-            results["distances"][0]
-        ):
-            output.append({
-                "startup_name": meta.get("startup_name", "Unknown"),
-                "solution_id": meta.get("solution_id"),
-                "chunk": doc,
-                "similarity_score": round(1 - dist, 4)  # cosine distance → similarity
-            })
+    # If problem_id is specified, check if its specific collection has items
+    if problem_id is not None:
+        pid_str = str(problem_id).strip()
+        if pid_str and pid_str.lower() not in ("none", "null", "all", "0"):
+            target_name = f"problem_{pid_str}"
+            try:
+                coll = client.get_collection(target_name)
+                if coll.count() > 0:
+                    collections_to_search.append(coll)
+            except Exception:
+                pass
 
-    return output
+    # If no specific collection found with items, search all non-empty collections
+    if not collections_to_search:
+        try:
+            for coll in client.list_collections():
+                try:
+                    if coll.count() > 0:
+                        collections_to_search.append(coll)
+                except Exception:
+                    continue
+        except Exception as e:
+            print(f"[RAG] Error listing collections: {e}")
+
+    if not collections_to_search:
+        return []
+
+    all_matches = []
+    for coll in collections_to_search:
+        try:
+            total_items = coll.count()
+            if total_items == 0:
+                continue
+            n_results = min(top_k, total_items)
+            results = coll.query(
+                query_embeddings=query_embedding,
+                n_results=n_results,
+                include=["documents", "metadatas", "distances"]
+            )
+            if results and results.get("documents") and len(results["documents"]) > 0:
+                for doc, meta, dist in zip(
+                    results["documents"][0],
+                    results["metadatas"][0],
+                    results["distances"][0]
+                ):
+                    all_matches.append({
+                        "startup_name": meta.get("startup_name", "Unknown"),
+                        "solution_id": meta.get("solution_id"),
+                        "problem_id": meta.get("problem_id"),
+                        "chunk": doc,
+                        "similarity_score": round(max(0.0, 1.0 - dist), 4)
+                    })
+        except Exception as query_err:
+            print(f"[RAG] Search error on collection {coll.name}: {query_err}")
+
+    # Deduplicate and sort descending by similarity score
+    all_matches.sort(key=lambda x: x["similarity_score"], reverse=True)
+    return all_matches[:top_k]
 
 
 def delete_solution_index(problem_id: int, solution_id: int):

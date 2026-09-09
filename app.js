@@ -99,7 +99,7 @@ function ensureRagEngine() {
       const pyProc = spawn(pythonExecutable, ['-m', 'uvicorn', 'main:app', '--host', '127.0.0.1', '--port', '8000'], {
         cwd: ragDir,
         stdio: 'inherit',
-        shell: true
+        shell: false
       });
 
       pyProc.on('error', (err) => {
@@ -107,7 +107,7 @@ function ensureRagEngine() {
         spawn('python', ['-m', 'uvicorn', 'main:app', '--host', '127.0.0.1', '--port', '8000'], {
           cwd: ragDir,
           stdio: 'inherit',
-          shell: true
+          shell: false
         });
       });
 

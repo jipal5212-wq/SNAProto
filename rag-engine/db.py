@@ -71,9 +71,13 @@ def insert_problem(raw_text: str, requirements_json: dict) -> int:
     conn.close()
     return pid
 
-def get_problem(problem_id: int) -> dict | None:
+def get_problem(problem_id) -> dict | None:
     conn = get_connection()
-    row = conn.execute("SELECT * FROM problems WHERE id = ?", (problem_id,)).fetchone()
+    try:
+        pid = int(problem_id) if str(problem_id).isdigit() else problem_id
+        row = conn.execute("SELECT * FROM problems WHERE id = ?", (pid,)).fetchone()
+    except Exception:
+        row = None
     conn.close()
     if row is None:
         return None

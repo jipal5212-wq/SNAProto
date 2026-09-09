@@ -6,10 +6,12 @@ evaluates documents so the prototype remains fully operational offline.
 """
 import json
 import re
+import time
 import anthropic
 from config import ANTHROPIC_API_KEY, ANTHROPIC_WORKSPACE_ID, CLAUDE_MODEL, LLM_MAX_TOKENS
 
 _client = None
+_api_disabled_until = 0
 
 def _get_client():
     global _client
@@ -29,21 +31,70 @@ def _heuristic_extract(system_prompt: str, user_prompt: str, fallback: dict) -> 
 
     # 1. Scoring Check (LLM Judge)
     if "scoring rubric" in sys_lower or "score this solution against the requirements" in text or "procurement evaluator" in sys_lower:
-        relevance = 4
-        feasibility = 4
-        innovation = 4
-        team = 4
-        pilot = 4
+        # Attempt to parse structured sections if present
+        solution_data = {}
+        requirements_data = {}
+        try:
+            parts = user_prompt.split("Startup Solution:")
+            if len(parts) == 2:
+                req_part = parts[0].replace("Government Requirements:", "").strip()
+                sol_part = parts[1].split("Score this solution")[0].strip()
+                requirements_data = json.loads(req_part)
+                solution_data = json.loads(sol_part)
+        except Exception:
+            pass
 
-        if any(w in text for w in ["iot", "acoustic", "sensor", "satellite", "radar", "detection", "leak", "emergency"]):
+        startup_name = solution_data.get("startup_name", "Startup")
+        trl_str = str(solution_data.get("trl_level", "")).lower()
+        cost_str = str(solution_data.get("cost_estimate", "")).lower()
+        team_str = str(solution_data.get("team_experience", "")).lower()
+        pilot_str = str(solution_data.get("pilot_readiness", "")).lower()
+        tech_list = [str(t).lower() for t in solution_data.get("tech_stack", [])]
+
+        # 1. Relevance: check alignment with domain & criteria
+        relevance = 4
+        if any(w in text for w in ["iot", "acoustic", "satellite", "radar", "ai/ml", "cnn", "sensor", "telemetry", "drone"]):
             relevance = 5
         if "conventional" in text or "excavation" in text:
-            innovation = 2
-            feasibility = 2
             relevance = 2
 
-        if "45.0 crore" in text or "850 crore" in text:
+        # 2. Feasibility: check budget compliance
+        feasibility = 4
+        if any(w in cost_str for w in ["45 lakh", "35 lakh", "25 lakh", "50 lakh"]):
+            feasibility = 5
+        elif any(w in cost_str for w in ["1.2 crore", "1.5 crore", "2 crore"]):
+            feasibility = 4
+        elif any(w in cost_str for w in ["10 crore", "45 crore", "850 crore"]):
             feasibility = 1
+
+        # 3. Innovation: differentiated technology novelty
+        innovation = 3
+        if any(w in text for w in ["synthetic aperture radar", "sar", "satellite", "quantum", "patented"]):
+            innovation = 5
+        elif any(w in text for w in ["acoustic", "edge ai", "computer vision", "neural network", "esp32", "mqtt"]):
+            innovation = 4
+        elif "conventional" in text or "manual" in text or "excavation" in text:
+            innovation = 2
+
+        # 4. Team Credibility: background and track record
+        team = 3
+        if any(w in team_str for w in ["isro", "iit", "phd", "municipal", "10+ years", "12 engineers"]):
+            team = 5
+        elif any(w in team_str for w in ["experienced", "engineers", "alumni", "5 years"]):
+            team = 4
+        elif any(w in team_str for w in ["intern", "student", "early stage"]):
+            team = 2
+
+        # 5. Pilot Readiness: TRL and readiness timeline
+        pilot = 3
+        if "trl 8" in trl_str or "trl 9" in trl_str or "30 days" in pilot_str or "operational" in pilot_str:
+            pilot = 5
+        elif "trl 7" in trl_str or "60 days" in pilot_str:
+            pilot = 4
+        elif "trl 5" in trl_str or "trl 6" in trl_str:
+            pilot = 3
+        elif "prototype" in pilot_str or "not ready" in pilot_str:
+            pilot = 2
 
         return {
             "relevance": relevance,
@@ -52,11 +103,11 @@ def _heuristic_extract(system_prompt: str, user_prompt: str, fallback: dict) -> 
             "team_credibility": team,
             "pilot_readiness": pilot,
             "justification": {
-                "relevance": "Solution demonstrates direct technological alignment with problem requirements.",
-                "feasibility": "Engineering timeline and budget are practical for municipal deployment.",
-                "innovation": "Modern architecture leverages edge intelligence and non-invasive sensors.",
-                "team_credibility": "Demonstrated domain experience with municipal pilot track record.",
-                "pilot_readiness": "Sensors and software stack are pre-calibrated for immediate deployment."
+                "relevance": f"{startup_name} technology architecture demonstrates direct capability alignment with the problem's functional requirements.",
+                "feasibility": f"Cost estimate ({solution_data.get('cost_estimate', 'standard pilot pricing')}) and deployment plan fit within allowable municipal funding constraints.",
+                "innovation": f"Leverages differentiated {', '.join(solution_data.get('tech_stack', ['advanced tech'])[:3])} architecture compared to conventional methods.",
+                "team_credibility": f"Engineering background and qualifications ({solution_data.get('team_experience', 'proven domain expertise')}) support delivery execution.",
+                "pilot_readiness": f"Demonstrated maturity level ({solution_data.get('trl_level', 'TRL validated')}) confirms capability to deploy pilot within operational timelines."
             }
         }
 
@@ -185,9 +236,15 @@ def call_claude_json(system_prompt: str, user_prompt: str, fallback: dict = None
     """
     Call Claude API with structured JSON-only output.
     Falls back to intelligent local heuristics if offline or on API failure.
+    Includes circuit breaker to avoid network lag when API quota is exhausted.
     """
+    global _api_disabled_until
     if fallback is None:
         fallback = {}
+
+    # Fast-path circuit breaker if credit balance was recently reported as depleted
+    if time.time() < _api_disabled_until:
+        return _heuristic_extract(system_prompt, user_prompt, fallback)
 
     client = _get_client()
     if client is None:
@@ -215,7 +272,12 @@ def call_claude_json(system_prompt: str, user_prompt: str, fallback: dict = None
         print(f"[LLM] JSON parse error: {e}")
         return _heuristic_extract(system_prompt, user_prompt, fallback)
     except anthropic.APIError as e:
-        print(f"[LLM] API error: {e}")
+        err_msg = str(e)
+        if "credit balance is too low" in err_msg or "balance" in err_msg.lower():
+            _api_disabled_until = time.time() + 120
+            print("[LLM] Notice: Anthropic API credit balance low. Auto-activating zero-latency semantic heuristic engine (will re-check in 2 min).")
+        else:
+            print(f"[LLM] API error: {e}")
         return _heuristic_extract(system_prompt, user_prompt, fallback)
     except Exception as e:
         print(f"[LLM] Unexpected error: {e}")
