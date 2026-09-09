@@ -7,11 +7,70 @@ evaluates documents so the prototype remains fully operational offline.
 import json
 import re
 import time
-import anthropic
-from config import ANTHROPIC_API_KEY, ANTHROPIC_WORKSPACE_ID, CLAUDE_MODEL, LLM_MAX_TOKENS
+import urllib.request
+try:
+    import anthropic
+except ImportError:
+    anthropic = None
+from config import (
+    ANTHROPIC_API_KEY, ANTHROPIC_WORKSPACE_ID, CLAUDE_MODEL, LLM_MAX_TOKENS,
+    GEMINI_API_KEY, GEMINI_MODEL, OPENAI_API_KEY, OPENAI_MODEL
+)
 
 _client = None
 _api_disabled_until = 0
+
+def _call_gemini_json(system_prompt: str, user_prompt: str):
+    if not GEMINI_API_KEY or len(GEMINI_API_KEY) < 10:
+        return None
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+    full_prompt = f"{system_prompt}\n\nTask:\n{user_prompt}" if system_prompt else user_prompt
+    payload = {
+        "contents": [{"parts": [{"text": full_prompt}]}],
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "temperature": 0.1
+        }
+    }
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"}
+    )
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        if text.startswith("```"):
+            lines = [l for l in text.split("\n") if not l.strip().startswith("```")]
+            text = "\n".join(lines).strip()
+        return json.loads(text)
+
+def _call_openai_json(system_prompt: str, user_prompt: str):
+    if not OPENAI_API_KEY or len(OPENAI_API_KEY) < 15:
+        return None
+    url = "https://api.openai.com/v1/chat/completions"
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": user_prompt})
+    payload = {
+        "model": OPENAI_MODEL,
+        "messages": messages,
+        "response_format": {"type": "json_object"},
+        "temperature": 0.1
+    }
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json"
+        }
+    )
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+        text = data["choices"][0]["message"]["content"].strip()
+        return json.loads(text)
 
 def _get_client():
     global _client
@@ -284,71 +343,120 @@ def _heuristic_extract(system_prompt: str, user_prompt: str, fallback: dict) -> 
 
 def call_claude_json(system_prompt: str, user_prompt: str, fallback: dict = None) -> dict:
     """
-    Call Claude API with structured JSON-only output.
-    Falls back to intelligent local heuristics if offline or on API failure.
-    Includes circuit breaker to avoid network lag when API quota is exhausted.
+    Multi-Provider LLM evaluation with JSON output:
+    1. Google Gemini (fast, native JSON mode)
+    2. OpenAI GPT-4o-mini (structured JSON)
+    3. Anthropic Claude (Claude 3.5 Sonnet)
+    4. Zero-latency intelligent semantic heuristic engine fallback
     """
     global _api_disabled_until
     if fallback is None:
         fallback = {}
 
-    # Fast-path circuit breaker if credit balance was recently reported as depleted
-    if time.time() < _api_disabled_until:
-        return _heuristic_extract(system_prompt, user_prompt, fallback)
+    # 1. Try Gemini if configured
+    if GEMINI_API_KEY and len(GEMINI_API_KEY) > 10:
+        try:
+            res = _call_gemini_json(system_prompt, user_prompt)
+            if res is not None:
+                return res
+        except Exception as e:
+            print(f"[LLM] Gemini API attempt: {e}")
 
-    client = _get_client()
-    if client is None:
-        # No API key configured — run intelligent semantic heuristic
-        return _heuristic_extract(system_prompt, user_prompt, fallback)
+    # 2. Try OpenAI if configured
+    if OPENAI_API_KEY and len(OPENAI_API_KEY) > 15:
+        try:
+            res = _call_openai_json(system_prompt, user_prompt)
+            if res is not None:
+                return res
+        except Exception as e:
+            print(f"[LLM] OpenAI API attempt: {e}")
 
-    try:
-        response = client.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=LLM_MAX_TOKENS,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_prompt}]
-        )
-        raw_text = response.content[0].text.strip()
+    # 3. Try Claude if configured and circuit breaker allows
+    if time.time() >= _api_disabled_until:
+        client = _get_client()
+        if client:
+            try:
+                response = client.messages.create(
+                    model=CLAUDE_MODEL,
+                    max_tokens=LLM_MAX_TOKENS,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": user_prompt}]
+                )
+                raw_text = response.content[0].text.strip()
+                if raw_text.startswith("```"):
+                    lines = raw_text.split("\n")
+                    lines = [l for l in lines if not l.strip().startswith("```")]
+                    raw_text = "\n".join(lines)
+                return json.loads(raw_text)
+            except json.JSONDecodeError as e:
+                print(f"[LLM] Claude JSON parse error: {e}")
+            except anthropic.APIError as e:
+                err_msg = str(e)
+                if "credit balance is too low" in err_msg or "balance" in err_msg.lower():
+                    _api_disabled_until = time.time() + 120
+                    print("[LLM] Anthropic low balance. Using semantic heuristic engine.")
+                else:
+                    print(f"[LLM] Anthropic API error: {e}")
+            except Exception as e:
+                print(f"[LLM] Claude unexpected error: {e}")
 
-        # Strip markdown code fences if the LLM wraps its response
-        if raw_text.startswith("```"):
-            lines = raw_text.split("\n")
-            lines = [l for l in lines if not l.strip().startswith("```")]
-            raw_text = "\n".join(lines)
-
-        return json.loads(raw_text)
-
-    except json.JSONDecodeError as e:
-        print(f"[LLM] JSON parse error: {e}")
-        return _heuristic_extract(system_prompt, user_prompt, fallback)
-    except anthropic.APIError as e:
-        err_msg = str(e)
-        if "credit balance is too low" in err_msg or "balance" in err_msg.lower():
-            _api_disabled_until = time.time() + 120
-            print("[LLM] Notice: Anthropic API credit balance low. Auto-activating zero-latency semantic heuristic engine (will re-check in 2 min).")
-        else:
-            print(f"[LLM] API error: {e}")
-        return _heuristic_extract(system_prompt, user_prompt, fallback)
-    except Exception as e:
-        print(f"[LLM] Unexpected error: {e}")
-        return _heuristic_extract(system_prompt, user_prompt, fallback)
+    # 4. Fall back to smart heuristic engine
+    return _heuristic_extract(system_prompt, user_prompt, fallback)
 
 def call_claude_text(system_prompt: str, user_prompt: str) -> str:
     """
-    Call Claude API for plain text response.
+    Call LLM for plain text response (Gemini -> OpenAI -> Claude -> empty string).
     """
-    client = _get_client()
-    if client is None:
-        return ""
+    # 1. Try Gemini
+    if GEMINI_API_KEY and len(GEMINI_API_KEY) > 10:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+            full_prompt = f"{system_prompt}\n\nTask:\n{user_prompt}" if system_prompt else user_prompt
+            payload = {"contents": [{"parts": [{"text": full_prompt}]}]}
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        except Exception as e:
+            print(f"[LLM] Gemini text error: {e}")
 
-    try:
-        response = client.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=LLM_MAX_TOKENS,
-            system=system_prompt,
-            messages=[{"role": "user", "content": user_prompt}]
-        )
-        return response.content[0].text.strip()
-    except Exception as e:
-        print(f"[LLM] Error: {e}")
-        return ""
+    # 2. Try OpenAI
+    if OPENAI_API_KEY and len(OPENAI_API_KEY) > 15:
+        try:
+            url = "https://api.openai.com/v1/chat/completions"
+            messages = []
+            if system_prompt:
+                messages.append({"role": "system", "content": system_prompt})
+            messages.append({"role": "user", "content": user_prompt})
+            payload = {"model": OPENAI_MODEL, "messages": messages}
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return data["choices"][0]["message"]["content"].strip()
+        except Exception as e:
+            print(f"[LLM] OpenAI text error: {e}")
+
+    # 3. Try Claude
+    client = _get_client()
+    if client:
+        try:
+            response = client.messages.create(
+                model=CLAUDE_MODEL,
+                max_tokens=LLM_MAX_TOKENS,
+                system=system_prompt,
+                messages=[{"role": "user", "content": user_prompt}]
+            )
+            return response.content[0].text.strip()
+        except Exception as e:
+            print(f"[LLM] Claude error: {e}")
+
+    return ""
+

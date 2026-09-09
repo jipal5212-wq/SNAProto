@@ -37,27 +37,28 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Session setup with resilient fallback
-let sessionStore;
-try {
-  sessionStore = MongoStore.create({
-    mongoUrl: mongoUri,
-    touchAfter: 24 * 3600
-  });
-  sessionStore.on('error', (err) => {
-    console.warn('⚠️ Session store warning (using in-memory fallback):', err.message);
-  });
-} catch (e) {
-  console.warn('⚠️ Failed to initialize MongoStore, using in-memory store:', e.message);
-}
-
 const sessionOptions = {
   secret: process.env.SESSION_SECRET || 'snap_secret_key_2026',
   resave: false,
   saveUninitialized: false,
   cookie: { maxAge: 1000 * 60 * 60 * 24 } // 1 day
 };
-if (sessionStore) {
-  sessionOptions.store = sessionStore;
+
+// Only attach MongoStore if MONGODB_URI is provided and not localhost
+if (process.env.MONGODB_URI && !process.env.MONGODB_URI.includes('localhost')) {
+  try {
+    const store = MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      touchAfter: 24 * 3600,
+      mongoOptions: { serverSelectionTimeoutMS: 5000 }
+    });
+    store.on('error', (err) => {
+      console.warn('⚠️ Session store warning:', err.message);
+    });
+    sessionOptions.store = store;
+  } catch (e) {
+    console.warn('⚠️ Failed to initialize MongoStore, using in-memory store:', e.message);
+  }
 }
 
 app.use(session(sessionOptions));

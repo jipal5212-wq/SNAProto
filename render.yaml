@@ -17,6 +17,12 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash
+      - key: OPENAI_API_KEY
+        sync: false
       - key: PYTHON_PATH
         value: /opt/venv/bin/python
       - key: RAG_ENGINE_URL
