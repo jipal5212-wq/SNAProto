@@ -168,10 +168,16 @@ function ensureRagEngine() {
   }).catch(() => {});
 }
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`====================================================`);
-  console.log(` SNAP GovTech Platform active on http://0.0.0.0:${PORT}`);
-  console.log(` AI RAG Microservice available on port 8000`);
-  console.log(`====================================================`);
-  ensureRagEngine();
-});
+if (process.env.VERCEL) {
+  console.log('⚡ Running in Vercel Serverless environment — connecting to Render RAG backend at:', ragBaseUrl);
+} else if (require.main === module) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`====================================================`);
+    console.log(` SNAP GovTech Platform active on http://0.0.0.0:${PORT}`);
+    console.log(` AI RAG Microservice available on port 8000`);
+    console.log(`====================================================`);
+    ensureRagEngine();
+  });
+}
+
+module.exports = app;

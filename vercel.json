@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "{views/**,public/**,rag-engine/frontend/**}"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/index.js"
+    }
+  ],
+  "env": {
+    "RAG_ENGINE_URL": "https://snap-govtech-platform.onrender.com"
+  }
+}
