@@ -2,6 +2,11 @@
 
 > **AI-Powered Platform for Government Innovation, Startup Discovery & Automated Procurement**
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/jipal5212-wq/SNAProto)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/new?template=https://github.com/jipal5212-wq/SNAProto)
+[![GitHub Repository](https://img.shields.io/badge/GitHub-jipal5212--wq%2FSNAProto-blue?logo=github)](https://github.com/jipal5212-wq/SNAProto)
+[![Docker Ready](https://img.shields.io/badge/Docker-Production%20Ready-2496ED?logo=docker)](file:///c:/Users/ASHISH%20KUMAR%20PAL/.gemini/antigravity-ide/scratch/SNAP-Startup-Network-Automated-Procurement-/SNAP/Dockerfile)
+
 **S.N.A.P (Startup Network & Automated Procurement)** is an AI-powered GovTech platform designed to bridge the gap between **government departments and innovative startups**.
 
 The platform enables government departments to transform real-world operational problems into structured challenges, discover relevant startups, evaluate their solutions, manage pilot programs, monitor measurable outcomes, and generate evidence-based procurement recommendations.
