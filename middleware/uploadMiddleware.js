@@ -2,9 +2,18 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const uploadDir = path.join(__dirname, '../public/uploads/proposals');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
+const os = require('os');
+
+const uploadDir = process.env.VERCEL
+  ? path.join(os.tmpdir(), 'uploads', 'proposals')
+  : path.join(__dirname, '../public/uploads/proposals');
+
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (e) {
+  console.warn('⚠️ Safe upload directory initialization:', e.message);
 }
 
 const storage = multer.diskStorage({

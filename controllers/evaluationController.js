@@ -173,7 +173,10 @@ exports.postTriggerRagShortlist = async (req, res) => {
             `Estimated Cost: Rs ${app.estimatedCost || 'Not mentioned'}`
           ].join('\n\n');
 
-          const tempDir = path.join(__dirname, '../public/uploads/proposals');
+          const os = require('os');
+          const tempDir = process.env.VERCEL
+            ? path.join(os.tmpdir(), 'proposals')
+            : path.join(__dirname, '../public/uploads/proposals');
           if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
           filePath = path.join(tempDir, `temp-${app._id}.txt`);
           fs.writeFileSync(filePath, tempContent, 'utf-8');
