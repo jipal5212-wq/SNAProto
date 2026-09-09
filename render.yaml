@@ -22,12 +22,8 @@ services:
       - key: RAG_ENGINE_URL
         value: http://127.0.0.1:8000
       - key: CHROMA_PERSIST_DIR
-        value: /data/chroma_data
+        value: /app/data/chroma_data
       - key: SQLITE_DB_PATH
-        value: /data/snap_rag.db
+        value: /app/data/snap_rag.db
       - key: UPLOAD_DIR
-        value: /data/uploads
-    disk:
-      name: snap-data
-      mountPath: /data
-      sizeGB: 1
+        value: /app/data/uploads
