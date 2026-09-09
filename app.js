@@ -22,8 +22,9 @@ require('./models/KPI');
 require('./models/Validation');
 require('./models/Recommendation');
 
-// Connect to MongoDB with timeout
-mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 5000 })
+// Connect to MongoDB with timeout and non-blocking query buffer
+mongoose.set('bufferCommands', false);
+mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 4000 })
   .then(() => console.log('✅ MongoDB Connected successfully'))
   .catch(err => console.warn('⚠️ MongoDB Connection Warning (Continuing with resilient fallback):', err.message));
 

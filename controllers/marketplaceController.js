@@ -3,17 +3,20 @@ const Startup = require('../models/Startup');
 const Application = require('../models/Application');
 const matchingService = require('../services/matchingService');
 
+const mongoose = require('mongoose');
+
 exports.getMarketplace = async (req, res) => {
   try {
-    const challenges = await Challenge.find({ status: 'PUBLISHED' })
-      .populate('department')
-      .sort({ createdAt: -1 });
-    
+    let challenges = [];
+    if (mongoose.connection.readyState === 1) {
+      challenges = await Challenge.find({ status: 'PUBLISHED' })
+        .populate('department')
+        .sort({ createdAt: -1 });
+    }
     res.render('layouts/main', { body: 'challenges/marketplace', challenges });
   } catch (err) {
-    console.error(err);
-    req.session.error = 'Failed to load challenges.';
-    res.redirect('/');
+    console.error('Marketplace query error:', err.message);
+    res.render('layouts/main', { body: 'challenges/marketplace', challenges: [] });
   }
 };
 
