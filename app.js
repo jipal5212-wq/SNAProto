@@ -22,10 +22,10 @@ require('./models/KPI');
 require('./models/Validation');
 require('./models/Recommendation');
 
-// Connect to MongoDB
-mongoose.connect(mongoUri)
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.error('MongoDB Connection Error:', err));
+// Connect to MongoDB with timeout
+mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 5000 })
+  .then(() => console.log('✅ MongoDB Connected successfully'))
+  .catch(err => console.warn('⚠️ MongoDB Connection Warning (Continuing with resilient fallback):', err.message));
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
@@ -36,14 +36,31 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Session setup
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'secret',
+// Session setup with resilient fallback
+let sessionStore;
+try {
+  sessionStore = MongoStore.create({
+    mongoUrl: mongoUri,
+    touchAfter: 24 * 3600
+  });
+  sessionStore.on('error', (err) => {
+    console.warn('⚠️ Session store warning (using in-memory fallback):', err.message);
+  });
+} catch (e) {
+  console.warn('⚠️ Failed to initialize MongoStore, using in-memory store:', e.message);
+}
+
+const sessionOptions = {
+  secret: process.env.SESSION_SECRET || 'snap_secret_key_2026',
   resave: false,
   saveUninitialized: false,
-  store: MongoStore.create({ mongoUrl: mongoUri }),
   cookie: { maxAge: 1000 * 60 * 60 * 24 } // 1 day
-}));
+};
+if (sessionStore) {
+  sessionOptions.store = sessionStore;
+}
+
+app.use(session(sessionOptions));
 
 // Global variables for views
 app.use((req, res, next) => {
