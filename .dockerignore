@@ -1,0 +1,11 @@
+node_modules
+.git
+.gitignore
+.env
+chroma_data
+rag-engine/chroma_data
+rag-engine/uploads
+scratch/
+test_startup_proposals/
+*.log
+*.tmp

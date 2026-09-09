@@ -93,10 +93,11 @@ function ensureRagEngine() {
     } else {
       console.log('🚀 Auto-starting RAG Engine microservice (port 8000)...');
       const ragDir = path.join(__dirname, 'rag-engine');
+      const defaultWinPython = 'C:\\Users\\ASHISH KUMAR PAL\\AppData\\Local\\Python\\bin\\python.exe';
       const pythonExecutable = process.env.PYTHON_PATH || 
-        'C:\\Users\\ASHISH KUMAR PAL\\AppData\\Local\\Python\\bin\\python.exe';
+        (process.platform === 'win32' ? defaultWinPython : 'python3');
       
-      const pyProc = spawn(pythonExecutable, ['-m', 'uvicorn', 'main:app', '--host', '127.0.0.1', '--port', '8000'], {
+      const pyProc = spawn(pythonExecutable, ['-m', 'uvicorn', 'main:app', '--host', '0.0.0.0', '--port', '8000'], {
         cwd: ragDir,
         stdio: 'inherit',
         shell: false
@@ -104,7 +105,7 @@ function ensureRagEngine() {
 
       pyProc.on('error', (err) => {
         console.warn('⚠️ Primary python spawn failed, falling back to "python":', err.message);
-        spawn('python', ['-m', 'uvicorn', 'main:app', '--host', '127.0.0.1', '--port', '8000'], {
+        spawn(process.platform === 'win32' ? 'python' : 'python3', ['-m', 'uvicorn', 'main:app', '--host', '0.0.0.0', '--port', '8000'], {
           cwd: ragDir,
           stdio: 'inherit',
           shell: false
