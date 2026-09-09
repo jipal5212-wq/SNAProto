@@ -22,6 +22,7 @@ const challengeSchema = new mongoose.Schema({
   deadline: { type: Date },
   status: { type: String, enum: ['DRAFT', 'PUBLISHED', 'CLOSED'], default: 'DRAFT' },
   aiGenerated: { type: Boolean, default: false },
+  ragProblemId: { type: Number },
   createdAt: { type: Date, default: Date.now }
 });
 

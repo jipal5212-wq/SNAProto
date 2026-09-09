@@ -7,8 +7,24 @@
 </div>
 
 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-    <form action="/challenges/<%= challenge._id %>/apply" method="POST" class="p-6 space-y-6">
+    <form action="/challenges/<%= challenge._id %>/apply" method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
         
+        <!-- Document Upload Section (Primary for RAG) -->
+        <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div class="flex items-start gap-3">
+                <div class="p-2 bg-blue-600 text-white rounded-md text-lg">📄</div>
+                <div class="flex-1">
+                    <label for="proposalDocument" class="block text-sm font-semibold text-blue-950 mb-1">
+                        Upload Solution Proposal Document (PDF / DOCX) *
+                    </label>
+                    <p class="text-xs text-blue-700 mb-2">
+                        Upload your pitch deck or technical proposal. Our AI RAG engine will automatically parse your architecture, TRL level, budget, and statutory compliance (DPIIT/turnover).
+                    </p>
+                    <input type="file" id="proposalDocument" name="proposalDocument" accept=".pdf,.docx,.doc" class="w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-blue-700 cursor-pointer">
+                </div>
+            </div>
+        </div>
+
         <div>
             <label for="solutionTitle" class="block text-sm font-medium text-gray-700 mb-1">Solution Title *</label>
             <input type="text" id="solutionTitle" name="solutionTitle" required class="w-full border border-gray-300 rounded-md p-2" placeholder="Name your proposed solution">
@@ -20,13 +36,13 @@
         </div>
         
         <div>
-            <label for="technicalApproach" class="block text-sm font-medium text-gray-700 mb-1">Technical Approach</label>
-            <textarea id="technicalApproach" name="technicalApproach" rows="4" class="w-full border border-gray-300 rounded-md p-2" placeholder="Describe the technology stack, architecture, and core components."></textarea>
+            <label for="technicalApproach" class="block text-sm font-medium text-gray-700 mb-1">Technical Approach (Optional if detailed in document)</label>
+            <textarea id="technicalApproach" name="technicalApproach" rows="3" class="w-full border border-gray-300 rounded-md p-2" placeholder="Describe the technology stack, architecture, and core components."></textarea>
         </div>
 
         <div>
             <label for="implementationPlan" class="block text-sm font-medium text-gray-700 mb-1">Implementation Plan for Pilot</label>
-            <textarea id="implementationPlan" name="implementationPlan" rows="3" class="w-full border border-gray-300 rounded-md p-2" placeholder="How would you roll this out during the expected pilot duration?"></textarea>
+            <textarea id="implementationPlan" name="implementationPlan" rows="2" class="w-full border border-gray-300 rounded-md p-2" placeholder="How would you roll this out during the expected pilot duration?"></textarea>
         </div>
 
         <div>
@@ -36,12 +52,12 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <label for="estimatedCost" class="block text-sm font-medium text-gray-700 mb-1">Estimated Cost ($)</label>
-                <input type="number" id="estimatedCost" name="estimatedCost" class="w-full border border-gray-300 rounded-md p-2" placeholder="E.g., 50000">
+                <label for="estimatedCost" class="block text-sm font-medium text-gray-700 mb-1">Estimated Cost (INR)</label>
+                <input type="number" id="estimatedCost" name="estimatedCost" class="w-full border border-gray-300 rounded-md p-2" placeholder="E.g., 500000">
             </div>
             <div>
                 <label for="pilotRequirements" class="block text-sm font-medium text-gray-700 mb-1">Government Resources Required</label>
-                <input type="text" id="pilotRequirements" name="pilotRequirements" class="w-full border border-gray-300 rounded-md p-2" placeholder="E.g., API access, 2 test vehicles, data export">
+                <input type="text" id="pilotRequirements" name="pilotRequirements" class="w-full border border-gray-300 rounded-md p-2" placeholder="E.g., SCADA API access, field test site">
             </div>
         </div>
 

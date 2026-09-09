@@ -1,6 +1,7 @@
 const Application = require('../models/Application');
 const Challenge = require('../models/Challenge');
 const matchingService = require('../services/matchingService');
+const ragService = require('../services/ragService');
 
 exports.getApply = async (req, res) => {
   try {
@@ -44,6 +45,38 @@ exports.postApply = async (req, res) => {
       matchScore = matchResult.score;
     }
 
+    let documentFile = req.file ? `/uploads/proposals/${req.file.filename}` : null;
+    let ragSolutionId = null;
+    let ragEligible = true;
+    let ragEligibilityReason = '';
+    let ragConsistencyFlags = [];
+
+    // Trigger RAG Engine parsing, eligibility check, and vector indexing if doc uploaded
+    if (req.file) {
+      try {
+        const isRagReady = await ragService.isAvailable();
+        if (isRagReady) {
+          if (!challenge.ragProblemId) {
+            challenge.ragProblemId = await ragService.syncProblem(challenge);
+            await challenge.save();
+          }
+          const ragResult = await ragService.uploadSolutionDoc(
+            challenge.ragProblemId,
+            startup ? startup.name : req.session.user.name,
+            req.file.path
+          );
+          if (ragResult && ragResult.solution_id) {
+            ragSolutionId = ragResult.solution_id;
+            ragEligible = ragResult.eligible !== false;
+            ragEligibilityReason = ragResult.eligibility_reason || '';
+            ragConsistencyFlags = ragResult.consistency_flags || [];
+          }
+        }
+      } catch (ragErr) {
+        console.warn('RAG processing warning (proceeding with normal application save):', ragErr.message);
+      }
+    }
+
     const application = new Application({
       challenge: challenge._id,
       startup: req.session.user.startup,
@@ -54,15 +87,26 @@ exports.postApply = async (req, res) => {
       expectedImpact,
       estimatedCost,
       pilotRequirements,
-      matchScore
+      matchScore,
+      documentFile,
+      ragSolutionId,
+      ragEligible,
+      ragEligibilityReason,
+      ragConsistencyFlags,
+      status: ragEligible ? 'SUBMITTED' : 'REJECTED'
     });
 
     await application.save();
-    req.session.success = 'Application submitted successfully.';
+
+    if (!ragEligible) {
+      req.session.error = `Application submitted but flagged INELIGIBLE by procurement filter: ${ragEligibilityReason}`;
+    } else {
+      req.session.success = 'Application and solution proposal document submitted successfully.';
+    }
     res.redirect('/startup/applications');
   } catch (err) {
     console.error(err);
-    req.session.error = 'Failed to submit application.';
+    req.session.error = 'Failed to submit application: ' + err.message;
     res.redirect(`/challenges/${req.params.id}`);
   }
 };

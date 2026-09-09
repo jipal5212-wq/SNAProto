@@ -74,10 +74,52 @@ app.use('/', evaluationRoutes);
 app.use('/', pilotRoutes);
 app.use('/', dashboardRoutes);
 
+// Unified RAG routes
+app.get('/rag', (req, res) => res.redirect('http://127.0.0.1:8000'));
+app.get('/rag/docs', (req, res) => res.redirect('http://127.0.0.1:8000/docs'));
+
 app.get('/', (req, res) => {
   res.render('layouts/main', { body: 'partials/home' });
 });
 
+// Auto-start RAG Engine microservice if not already running
+const { spawn } = require('child_process');
+const ragService = require('./services/ragService');
+
+function ensureRagEngine() {
+  ragService.isAvailable().then(isOnline => {
+    if (isOnline) {
+      console.log('⚡ RAG Engine microservice is active on http://127.0.0.1:8000');
+    } else {
+      console.log('🚀 Auto-starting RAG Engine microservice (port 8000)...');
+      const ragDir = path.join(__dirname, 'rag-engine');
+      const pythonExecutable = process.env.PYTHON_PATH || 
+        'C:\\Users\\ASHISH KUMAR PAL\\AppData\\Local\\Python\\bin\\python.exe';
+      
+      const pyProc = spawn(pythonExecutable, ['-m', 'uvicorn', 'main:app', '--host', '127.0.0.1', '--port', '8000'], {
+        cwd: ragDir,
+        stdio: 'inherit',
+        shell: true
+      });
+
+      pyProc.on('error', (err) => {
+        console.warn('⚠️ Primary python spawn failed, falling back to "python":', err.message);
+        spawn('python', ['-m', 'uvicorn', 'main:app', '--host', '127.0.0.1', '--port', '8000'], {
+          cwd: ragDir,
+          stdio: 'inherit',
+          shell: true
+        });
+      });
+
+      process.on('exit', () => { try { pyProc.kill(); } catch (_) {} });
+    }
+  }).catch(() => {});
+}
+
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`====================================================`);
+  console.log(` SNAP GovTech Platform active on http://localhost:${PORT}`);
+  console.log(` AI RAG Microservice available on http://localhost:8000`);
+  console.log(`====================================================`);
+  ensureRagEngine();
 });
