@@ -65,13 +65,18 @@ def _parse_turnover_crores(turnover_str: str) -> float | None:
 
     value = float(match.group(1))
 
-    # Convert lakhs to crores
+    # Convert units to crores
     if "lakh" in s or "lac" in s:
         value = value / 100.0
     elif "crore" in s or " cr" in s:
         pass  # already in crores
     elif "million" in s:
-        value = value / 10.0  # 1 million ≈ 0.1 crore (rough)
+        value = value / 10.0  # 1 million ≈ 0.1 crore
+    elif "k" in s or "thousand" in s:
+        value = value / 10000.0
+    elif value > 1000:
+        # Raw INR without denomination (e.g. 50000 -> 0.005 Cr)
+        value = value / 10000000.0
 
     return value
 

@@ -1,10 +1,19 @@
 <header class="bg-white shadow-sm sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div class="flex items-center">
+        <div class="flex items-center gap-6">
             <a href="/" class="flex items-center gap-2">
                 <div class="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold">GP</div>
                 <span class="text-xl font-bold text-gray-900">GovPilot</span>
             </a>
+            <nav class="hidden md:flex items-center gap-4 text-sm font-medium text-gray-600">
+                <a href="/challenges" class="hover:text-primary transition-colors">Challenges</a>
+                <a href="/gem-registry" class="hover:text-primary transition-colors flex items-center gap-1 text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">
+                    <span>🏛️ GeM & Startup Registry</span>
+                </a>
+                <a href="/rag" target="_blank" class="hover:text-primary transition-colors flex items-center gap-1 text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-200">
+                    <span>⚡ AI RAG</span>
+                </a>
+            </nav>
         </div>
         <div class="flex items-center gap-4">
             <% if (user) { %>
