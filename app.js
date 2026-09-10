@@ -108,14 +108,35 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'SNAP GovTech Platform', version: '1.0.0' });
 });
 
-// Serve standalone RAG Engine frontend on the public web
-app.get('/rag', (req, res) => {
-  res.sendFile(path.join(__dirname, 'rag-engine', 'frontend', 'index.html'));
+// Integrated RAG Engine Frontend inside SNAP platform layout
+app.get('/rag', async (req, res) => {
+  try {
+    const Challenge = mongoose.model('Challenge');
+    const challenges = await Challenge.find().populate('department').sort({ createdAt: -1 });
+    const selectedChallengeId = req.query.challengeId || (challenges.length > 0 ? challenges[0]._id.toString() : null);
+    res.render('layouts/main', {
+      body: 'rag/index',
+      challenges,
+      selectedChallengeId
+    });
+  } catch (err) {
+    console.warn('Error loading challenges for RAG workspace:', err.message);
+    res.render('layouts/main', {
+      body: 'rag/index',
+      challenges: [],
+      selectedChallengeId: null
+    });
+  }
+});
+
+// Standalone raw RAG microservice UI (unembedded)
+app.get('/rag-raw', (req, res) => {
+  res.sendFile('index.html', { root: path.join(__dirname, 'rag-engine', 'frontend') });
 });
 
 // Proxy RAG API requests to internal FastAPI microservice
 const ragBaseUrl = process.env.RAG_ENGINE_URL || 'http://127.0.0.1:8000';
-app.all(/^\/(problem|startup\/upload|shortlist|search)/, async (req, res) => {
+app.all(/^\/(problem|problems|startup\/upload|shortlist|search)/, async (req, res) => {
   try {
     const targetUrl = `${ragBaseUrl}${req.originalUrl}`;
     const headers = { ...req.headers };

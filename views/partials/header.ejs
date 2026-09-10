@@ -2,15 +2,18 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div class="flex items-center gap-6">
             <a href="/" class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold">GP</div>
-                <span class="text-xl font-bold text-gray-900">GovPilot</span>
+                <div class="w-8 h-8 bg-primary rounded-md flex items-center justify-center text-white font-bold">GP
+                </div>
+                <span class="text-xl font-bold text-gray-900">S.N.A.P</span>
             </a>
             <nav class="hidden md:flex items-center gap-4 text-sm font-medium text-gray-600">
                 <a href="/challenges" class="hover:text-primary transition-colors">Challenges</a>
-                <a href="/gem-registry" class="hover:text-primary transition-colors flex items-center gap-1 text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">
+                <a href="/gem-registry"
+                    class="hover:text-primary transition-colors flex items-center gap-1 text-amber-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200">
                     <span>🏛️ GeM & Startup Registry</span>
                 </a>
-                <a href="/rag" target="_blank" class="hover:text-primary transition-colors flex items-center gap-1 text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-200">
+                <a href="/rag"
+                    class="hover:text-primary transition-colors flex items-center gap-1 text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-200">
                     <span>⚡ AI RAG</span>
                 </a>
             </nav>
@@ -18,10 +21,12 @@
         <div class="flex items-center gap-4">
             <% if (user) { %>
                 <span class="text-sm text-gray-600 font-medium">Hello, <%= user.name %> (<%= user.role %>)</span>
-                <a href="/auth/logout" class="text-sm text-red-600 hover:text-red-800 font-medium px-3 py-1 rounded border border-red-200 hover:bg-red-50 transition-colors">Logout</a>
-            <% } else { %>
-                <a href="/auth/login" class="text-sm bg-primary text-white hover:bg-blue-700 font-medium px-4 py-2 rounded shadow transition-colors">Login</a>
-            <% } %>
+                <a href="/auth/logout"
+                    class="text-sm text-red-600 hover:text-red-800 font-medium px-3 py-1 rounded border border-red-200 hover:bg-red-50 transition-colors">Logout</a>
+                <% } else { %>
+                    <a href="/auth/login"
+                        class="text-sm bg-primary text-white hover:bg-blue-700 font-medium px-4 py-2 rounded shadow transition-colors">Login</a>
+                    <% } %>
         </div>
     </div>
 </header>

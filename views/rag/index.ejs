@@ -1,0 +1,883 @@
+<div class="space-y-6">
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 rounded-2xl p-6 text-white shadow-lg border border-indigo-800/40 relative overflow-hidden">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 relative z-10">
+            <div>
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                        ⚡ Retrieval-Augmented Generation (RAG)
+                    </span>
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Pipeline Online
+                    </span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
+                    <span>AI Procurement Intelligence Hub</span>
+                </h1>
+                <p class="text-sm text-slate-300 max-w-2xl mt-1.5">
+                    Automated, audit-proof proposal scrutiny powered by dense vector search in ChromaDB, 8-dimension multi-criteria scoring, and automated bluff & contradiction detection.
+                </p>
+            </div>
+
+            <!-- Diagnostics Pills -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 text-xs">
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-xl p-2.5">
+                    <div class="text-slate-400 text-[11px]">Vector Store</div>
+                    <div class="font-bold text-slate-100 flex items-center gap-1.5 mt-0.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        ChromaDB (HNSW)
+                    </div>
+                </div>
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-xl p-2.5">
+                    <div class="text-slate-400 text-[11px]">Dense Embeddings</div>
+                    <div class="font-bold text-slate-100 flex items-center gap-1.5 mt-0.5">
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        all-MiniLM-L6-v2 (384-D)
+                    </div>
+                </div>
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-xl p-2.5">
+                    <div class="text-slate-400 text-[11px]">LLM Evaluator</div>
+                    <div class="font-bold text-slate-100 flex items-center gap-1.5 mt-0.5">
+                        <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                        Gemini 3.5 Flash
+                    </div>
+                </div>
+                <div class="bg-slate-800/80 backdrop-blur border border-slate-700/60 rounded-xl p-2.5">
+                    <div class="text-slate-400 text-[11px]">Pre-Filter Gate</div>
+                    <div class="font-bold text-slate-100 flex items-center gap-1.5 mt-0.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                        DPIIT + ₹100Cr Cap
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Challenge Context Selector Bar -->
+    <div class="bg-white rounded-xl shadow-xs border border-gray-200 p-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-3 flex-1">
+                <div class="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-lg flex-shrink-0">
+                    🏛️
+                </div>
+                <div class="flex-1 min-w-0">
+                    <label for="challengeSelector" class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                        Select Active Challenge / Procurement Problem
+                    </label>
+                    <select id="challengeSelector" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm font-medium text-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                        <% if (challenges && challenges.length > 0) { %>
+                            <% challenges.forEach((ch) => { %>
+                                <option value="<%= ch._id %>" 
+                                    data-title="<%= ch.title %>"
+                                    data-ragid="<%= ch.ragProblemId || '' %>"
+                                    data-problem="<%= (ch.problemStatement || ch.rawProblem || '').replace(/"/g, '&quot;') %>"
+                                    <%= (selectedChallengeId && selectedChallengeId.toString() === ch._id.toString()) ? 'selected' : '' %>>
+                                    <%= ch.title %> <%= ch.ragProblemId ? `[RAG ID: #${ch.ragProblemId}]` : '[Unsynced]' %>
+                                </option>
+                            <% }) %>
+                        <% } else { %>
+                            <option value="">No challenges found in database</option>
+                        <% } %>
+                        <option value="custom">✍️ Enter Custom Problem Statement...</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <div id="ragProblemBadge" class="px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-xs font-bold text-indigo-800 flex items-center gap-1.5 whitespace-nowrap">
+                    <span>Active Problem ID:</span>
+                    <span id="activeProblemIdDisplay" class="bg-indigo-600 text-white px-2 py-0.5 rounded font-mono">1</span>
+                </div>
+                <button id="btnSyncChallenge" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors flex items-center gap-1 whitespace-nowrap">
+                    <span>🔄 Sync to RAG</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="border-b border-gray-200">
+        <nav class="flex space-x-2 sm:space-x-4 overflow-x-auto pb-px" aria-label="Tabs">
+            <button onclick="switchTab('tab-shortlist')" id="tabBtn-shortlist" class="tab-btn px-4 py-3 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 flex items-center gap-2 whitespace-nowrap">
+                <span>⚡ AI Shortlisting & Matrix</span>
+                <span id="shortlistCountBadge" class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Top 15</span>
+            </button>
+            <button onclick="switchTab('tab-search')" id="tabBtn-search" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center gap-2 whitespace-nowrap">
+                <span>🔍 Semantic Vector Search</span>
+            </button>
+            <button onclick="switchTab('tab-upload')" id="tabBtn-upload" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center gap-2 whitespace-nowrap">
+                <span>📤 Proposal Ingestion & Chunker</span>
+            </button>
+            <button onclick="switchTab('tab-extractor')" id="tabBtn-extractor" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center gap-2 whitespace-nowrap">
+                <span>🏛️ Problem Ontologist</span>
+            </button>
+            <button onclick="switchTab('tab-architecture')" id="tabBtn-architecture" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 flex items-center gap-2 whitespace-nowrap">
+                <span>📐 Pipeline Math & Proof</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 1: AI SHORTLISTING & 8-DIMENSION EVALUATION MATRIX -->
+    <!-- ======================================================== -->
+    <div id="tab-shortlist" class="tab-content space-y-6">
+        <!-- Control Bar -->
+        <div class="bg-white rounded-xl shadow-xs border border-gray-200 p-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                        <span>Multi-Dimensional AI Evaluation & Ranked Shortlist</span>
+                    </h2>
+                    <p class="text-xs text-gray-500 mt-0.5">
+                        Aggregates technical fit (25%), impact (20%), feasibility (15%), cost (10%), scalability (10%), security (10%), team (5%), and innovation (5%) with automated contradiction penalties.
+                    </p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer select-none">
+                        <input type="checkbox" id="rescoreCheckbox" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        <span>Force Re-score</span>
+                    </label>
+                    <button id="btnRunShortlist" onclick="loadShortlist()" class="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg shadow-sm flex items-center gap-2 transition-all">
+                        <span id="shortlistBtnIcon">⚡</span>
+                        <span id="shortlistBtnText">Run AI Shortlisting</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rubric Summary Bar -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 text-center text-xs">
+            <div class="bg-indigo-50/60 border border-indigo-100 rounded-lg p-2">
+                <div class="text-[10px] text-indigo-700 font-medium truncate">Technical Fit</div>
+                <div class="text-sm font-black text-indigo-900">25%</div>
+            </div>
+            <div class="bg-blue-50/60 border border-blue-100 rounded-lg p-2">
+                <div class="text-[10px] text-blue-700 font-medium truncate">Expected Impact</div>
+                <div class="text-sm font-black text-blue-900">20%</div>
+            </div>
+            <div class="bg-emerald-50/60 border border-emerald-100 rounded-lg p-2">
+                <div class="text-[10px] text-emerald-700 font-medium truncate">Feasibility</div>
+                <div class="text-sm font-black text-emerald-900">15%</div>
+            </div>
+            <div class="bg-amber-50/60 border border-amber-100 rounded-lg p-2">
+                <div class="text-[10px] text-amber-700 font-medium truncate">Cost Effective</div>
+                <div class="text-sm font-black text-amber-900">10%</div>
+            </div>
+            <div class="bg-teal-50/60 border border-teal-100 rounded-lg p-2">
+                <div class="text-[10px] text-teal-700 font-medium truncate">Scalability</div>
+                <div class="text-sm font-black text-teal-900">10%</div>
+            </div>
+            <div class="bg-purple-50/60 border border-purple-100 rounded-lg p-2">
+                <div class="text-[10px] text-purple-700 font-medium truncate">Security & Privacy</div>
+                <div class="text-sm font-black text-purple-900">10%</div>
+            </div>
+            <div class="bg-sky-50/60 border border-sky-100 rounded-lg p-2">
+                <div class="text-[10px] text-sky-700 font-medium truncate">Team Capability</div>
+                <div class="text-sm font-black text-sky-900">5%</div>
+            </div>
+            <div class="bg-rose-50/60 border border-rose-100 rounded-lg p-2">
+                <div class="text-[10px] text-rose-700 font-medium truncate">Innovation</div>
+                <div class="text-sm font-black text-rose-900">5%</div>
+            </div>
+        </div>
+
+        <!-- Shortlist Results Area -->
+        <div id="shortlistContainer" class="bg-white rounded-xl shadow-xs border border-gray-200 overflow-hidden">
+            <div class="p-8 text-center" id="shortlistEmptyState">
+                <div class="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3 text-xl">
+                    📊
+                </div>
+                <h3 class="text-sm font-bold text-gray-800">Ready to Evaluate Proposals</h3>
+                <p class="text-xs text-gray-500 max-w-md mx-auto mt-1">
+                    Click <strong>"Run AI Shortlisting"</strong> to retrieve candidate proposals from ChromaDB, execute multi-dimensional scoring, and audit internal contradictions.
+                </p>
+            </div>
+
+            <!-- Table loaded via JS -->
+            <div id="shortlistTableWrap" class="hidden overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 border-b border-gray-200 text-gray-600 font-semibold uppercase tracking-wider">
+                        <tr>
+                            <th class="px-4 py-3 w-12 text-center">Rank</th>
+                            <th class="px-4 py-3">Startup & Proposal</th>
+                            <th class="px-4 py-3 text-center">Final Score</th>
+                            <th class="px-4 py-3">Dimension Scores Breakdown</th>
+                            <th class="px-4 py-3 text-center">Doability & Integrity</th>
+                            <th class="px-4 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shortlistTableBody" class="divide-y divide-gray-100">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 2: CROSS-DOCUMENT SEMANTIC VECTOR SEARCH -->
+    <!-- ======================================================== -->
+    <div id="tab-search" class="tab-content hidden space-y-6">
+        <div class="bg-white rounded-xl shadow-xs border border-gray-200 p-6">
+            <div class="max-w-3xl">
+                <h2 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                    <span>Cross-Document Semantic Search in ChromaDB</span>
+                </h2>
+                <p class="text-xs text-gray-500 mt-1">
+                    Directly query 384-dimensional dense vector embeddings generated by <code class="bg-gray-100 px-1.5 py-0.5 rounded text-indigo-700 font-mono text-[11px]">all-MiniLM-L6-v2</code>. Finds relevant technology, pilot experience, and technical claims across all indexed proposals regardless of wording.
+                </p>
+
+                <form onsubmit="runSemanticSearch(event)" class="mt-4 flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="searchInput" placeholder="e.g. IoT acoustic vibration leak detection with SCADA integration..." 
+                        class="flex-1 bg-gray-50 border border-gray-300 rounded-lg px-3.5 py-2.5 text-sm text-gray-800 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                    <button type="submit" id="btnSearch" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-5 py-2.5 rounded-lg shadow-xs transition-colors flex items-center justify-center gap-2 whitespace-nowrap">
+                        <span>🔍 Search Embeddings</span>
+                    </button>
+                </form>
+
+                <!-- Query Suggestions -->
+                <div class="flex items-center gap-1.5 flex-wrap mt-3 text-[11px] text-gray-500">
+                    <span class="font-medium text-gray-400">Try keywords:</span>
+                    <button type="button" onclick="setSearch('acoustic sensors pipeline leak detection')" class="px-2 py-0.5 bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 rounded border border-gray-200 transition-colors">Acoustic Leak Sensors</button>
+                    <button type="button" onclick="setSearch('SCADA telemetry real-time monitoring')" class="px-2 py-0.5 bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 rounded border border-gray-200 transition-colors">SCADA Telemetry</button>
+                    <button type="button" onclick="setSearch('computer vision camera traffic flow analytics')" class="px-2 py-0.5 bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 rounded border border-gray-200 transition-colors">Computer Vision Traffic</button>
+                    <button type="button" onclick="setSearch('DPIIT registered municipal pilot deployment')" class="px-2 py-0.5 bg-gray-100 hover:bg-indigo-50 hover:text-indigo-600 rounded border border-gray-200 transition-colors">DPIIT Municipal Pilot</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Results Grid -->
+        <div id="searchResultsArea" class="space-y-4">
+            <!-- Populated via JavaScript -->
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 3: PROPOSAL INGESTION & INSTANT CHUNKER -->
+    <!-- ======================================================== -->
+    <div id="tab-upload" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Upload Form -->
+            <div class="bg-white rounded-xl shadow-xs border border-gray-200 p-6">
+                <h2 class="text-base font-bold text-gray-900 mb-1">Upload New Startup Solution Proposal</h2>
+                <p class="text-xs text-gray-500 mb-4">
+                    Supports <strong>PDF, DOCX, and TXT</strong>. Automatically executes text extraction, sliding-window chunking, DPIIT rule checks, and ChromaDB vector indexing.
+                </p>
+
+                <form id="proposalUploadForm" onsubmit="handleProposalUpload(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Startup / Vendor Name</label>
+                        <input type="text" id="uploadStartupName" placeholder="e.g. AeroSense Technologies Pvt. Ltd." required
+                            class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Target Problem Statement / Collection</label>
+                        <select id="uploadProblemId" class="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <option value="1">Problem #1 (Urban Water Pipeline Telemetry)</option>
+                            <option value="2">Problem #2 (Smart Traffic Control)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Proposal Document (.pdf, .docx, .txt)</label>
+                        <div class="border-2 border-dashed border-gray-300 hover:border-indigo-500 rounded-xl p-6 text-center bg-gray-50/50 cursor-pointer transition-colors" onclick="document.getElementById('proposalFileInput').click()">
+                            <input type="file" id="proposalFileInput" accept=".pdf,.docx,.doc,.txt" required class="hidden" onchange="updateFileLabel(this)">
+                            <div class="text-3xl mb-2">📄</div>
+                            <div id="fileUploadLabel" class="text-xs font-semibold text-indigo-600">Click to browse or drop file here</div>
+                            <div class="text-[11px] text-gray-400 mt-1">PDF, Word, or plain text proposals up to 50MB</div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btnUploadProposal" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2.5 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2">
+                        <span>⚡ Ingest, Chunk & Index into ChromaDB</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Ingestion Live Log & Diagnostics -->
+            <div class="bg-white rounded-xl shadow-xs border border-gray-200 p-6 flex flex-col">
+                <h3 class="text-sm font-bold text-gray-900 mb-1 flex items-center justify-between">
+                    <span>Ingestion Pipeline Real-Time Inspection</span>
+                    <span class="text-[10px] text-gray-400 font-mono">Sliding Window: 400w / 50w overlap</span>
+                </h3>
+                <p class="text-xs text-gray-500 mb-3">Logs live steps: parser &rarr; eligibility &rarr; extractor &rarr; consistency &rarr; ChromaDB vector upsert.</p>
+
+                <div id="ingestionLiveLog" class="flex-1 bg-slate-950 text-slate-200 font-mono text-xs p-4 rounded-lg overflow-y-auto max-h-96 space-y-1.5 border border-slate-800">
+                    <div class="text-slate-500">// Ready. Awaiting document upload...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 4: PROBLEM ONTOLOGIST & RUBRIC EXTRACTOR -->
+    <!-- ======================================================== -->
+    <div id="tab-extractor" class="tab-content hidden space-y-6">
+        <div class="bg-white rounded-xl shadow-xs border border-gray-200 p-6">
+            <h2 class="text-base font-bold text-gray-900 mb-1">Government Problem Deconstructor & Rubric Extractor</h2>
+            <p class="text-xs text-gray-500 mb-4">
+                Takes raw, unstructured departmental problem statements and uses <strong>Gemini 3.5 Flash</strong> to extract structured parameters across all 8 GovTech procurement dimensions.
+            </p>
+
+            <form onsubmit="handleDeconstructProblem(event)" class="space-y-3">
+                <textarea id="rawProblemInput" rows="5" placeholder="Enter full government problem statement (e.g., The Municipal Corporation faces difficulty monitoring 500+ km of water pipelines for leaks in real time...)" required
+                    class="w-full bg-gray-50 border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-sans"></textarea>
+                <button type="submit" id="btnDeconstruct" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-5 py-2.5 rounded-lg shadow-sm transition-colors flex items-center gap-2">
+                    <span>🤖 Deconstruct with AI & Formulate Rubric</span>
+                </button>
+            </form>
+        </div>
+
+        <div id="deconstructedResultArea" class="hidden bg-white rounded-xl shadow-xs border border-gray-200 p-6">
+            <!-- Populated via JavaScript -->
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- TAB 5: ARCHITECTURE & MATHEMATICAL FORMULATION -->
+    <!-- ======================================================== -->
+    <div id="tab-architecture" class="tab-content hidden space-y-6">
+        <div class="bg-white rounded-xl shadow-xs border border-gray-200 p-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-2">Mathematical Scoring & Penalty Proof</h2>
+            <p class="text-xs text-gray-600 mb-6">
+                SNAP uses an objective, deterministic formulation to score, normalize, and rank startup proposals.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-3">
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">1. Weighted Average Formulation</h3>
+                    <div class="bg-white p-3 rounded-lg border border-slate-200 font-mono text-xs text-indigo-900 overflow-x-auto">
+                        Raw Weighted Avg = &Sigma; (Score_i &times; Weight_i) / &Sigma; Weight_i &isin; [1.0, 5.0]
+                    </div>
+                    <ul class="text-xs text-gray-600 space-y-1">
+                        <li>• <strong>Technical Fit (W₁):</strong> 0.25 (25%)</li>
+                        <li>• <strong>Expected Impact (W₂):</strong> 0.20 (20%)</li>
+                        <li>• <strong>Feasibility (W₃):</strong> 0.15 (15%)</li>
+                        <li>• <strong>Cost Effectiveness (W₄):</strong> 0.10 (10%)</li>
+                        <li>• <strong>Scalability (W₅):</strong> 0.10 (10%)</li>
+                        <li>• <strong>Security & Data Privacy (W₆):</strong> 0.10 (10%)</li>
+                        <li>• <strong>Startup Capability / Team (W₇):</strong> 0.05 (5%)</li>
+                        <li>• <strong>Innovation (W₈):</strong> 0.05 (5%)</li>
+                    </ul>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-3">
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">2. Normalization & Contradiction Penalty</h3>
+                    <div class="bg-white p-3 rounded-lg border border-slate-200 font-mono text-xs text-indigo-900 overflow-x-auto">
+                        Normalized = ((Raw Weighted Avg - 1.0) / 4.0) &times; 10.0 &isin; [0.0, 10.0]<br><br>
+                        Final Score = max(0.0, Normalized - (N_flags &times; 0.5) - (3.0 if not doable))
+                    </div>
+                    <ul class="text-xs text-gray-600 space-y-1.5">
+                        <li>• <strong>Consistency Flag Penalty:</strong> 0.5 points deducted per internal contradiction detected by the LLM auditor (e.g. TRL 9 claim with only prototype evidence).</li>
+                        <li>• <strong>Doability Violation:</strong> Hard 3.0 point deduction if marked practically impossible or vaporware.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Client-side Interactive Logic -->
+<script>
+    // Global state
+    let activeProblemId = 1;
+
+    // Tab switching
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('border-indigo-600', 'text-indigo-600', 'font-bold');
+            btn.classList.add('border-transparent', 'text-gray-500', 'font-semibold');
+        });
+
+        const activeContent = document.getElementById(tabId);
+        const activeBtn = document.getElementById('tabBtn-' + tabId.replace('tab-', ''));
+        if (activeContent) activeContent.classList.remove('hidden');
+        if (activeBtn) {
+            activeBtn.classList.remove('border-transparent', 'text-gray-500', 'font-semibold');
+            activeBtn.classList.add('border-indigo-600', 'text-indigo-600', 'font-bold');
+        }
+    }
+
+    // Update active problem from selector
+    const selector = document.getElementById('challengeSelector');
+    if (selector) {
+        selector.addEventListener('change', function() {
+            const selectedOpt = selector.options[selector.selectedIndex];
+            if (!selectedOpt) return;
+            if (selectedOpt.value === 'custom') {
+                switchTab('tab-extractor');
+                return;
+            }
+            const ragId = selectedOpt.getAttribute('data-ragid');
+            if (ragId && ragId !== 'null' && ragId !== '') {
+                activeProblemId = parseInt(ragId);
+                document.getElementById('activeProblemIdDisplay').innerText = activeProblemId;
+                const upProb = document.getElementById('uploadProblemId');
+                if (upProb) upProb.value = activeProblemId;
+                loadShortlist();
+            } else {
+                document.getElementById('activeProblemIdDisplay').innerText = 'Unsynced';
+            }
+        });
+    }
+
+    // Sync Challenge button
+    const btnSync = document.getElementById('btnSyncChallenge');
+    if (btnSync) {
+        btnSync.addEventListener('click', async function() {
+            const selectedOpt = selector.options[selector.selectedIndex];
+            if (!selectedOpt || selectedOpt.value === 'custom' || !selectedOpt.value) {
+                alert('Please select a valid challenge from the dropdown first.');
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = '<span>⏳ Syncing...</span>';
+
+            const problemText = selectedOpt.getAttribute('data-problem') || selectedOpt.getAttribute('data-title');
+            try {
+                const res = await fetch('/problem', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ problem_text: problemText })
+                });
+                const data = await res.json();
+                if (data && data.problem_id) {
+                    activeProblemId = data.problem_id;
+                    document.getElementById('activeProblemIdDisplay').innerText = activeProblemId;
+                    const upProb = document.getElementById('uploadProblemId');
+                    if (upProb) upProb.value = activeProblemId;
+                    alert(`✅ Successfully synced to RAG Engine with Problem ID #${data.problem_id}`);
+                    loadShortlist();
+                } else {
+                    alert('Sync failed: ' + JSON.stringify(data));
+                }
+            } catch (err) {
+                alert('Sync Error: ' + err.message);
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<span>🔄 Sync to RAG</span>';
+            }
+        });
+    }
+
+    // File input label updater
+    function updateFileLabel(input) {
+        if (input.files && input.files[0]) {
+            document.getElementById('fileUploadLabel').innerText = 'Selected: ' + input.files[0].name + ' (' + (input.files[0].size / 1024).toFixed(1) + ' KB)';
+        }
+    }
+
+    // 1. Load Shortlist
+    async function loadShortlist() {
+        const btn = document.getElementById('btnRunShortlist');
+        const icon = document.getElementById('shortlistBtnIcon');
+        const text = document.getElementById('shortlistBtnText');
+        const rescore = document.getElementById('rescoreCheckbox') ? document.getElementById('rescoreCheckbox').checked : false;
+
+        if (btn) btn.disabled = true;
+        if (icon) icon.innerText = '⏳';
+        if (text) text.innerText = 'Evaluating Proposals...';
+
+        try {
+            const res = await fetch(`/shortlist/${activeProblemId}?rescore=${rescore}&top_n=15`);
+            const data = await res.json();
+
+            const emptyState = document.getElementById('shortlistEmptyState');
+            const tableWrap = document.getElementById('shortlistTableWrap');
+            const tbody = document.getElementById('shortlistTableBody');
+
+            if (data.status === 'no_solutions' || !data.ranked_solutions || data.ranked_solutions.length === 0) {
+                if (emptyState) {
+                    emptyState.classList.remove('hidden');
+                    emptyState.innerHTML = `
+                        <div class="w-12 h-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-3 text-xl">⚠️</div>
+                        <h3 class="text-sm font-bold text-gray-800">No Eligible Proposals Found for Problem #${activeProblemId}</h3>
+                        <p class="text-xs text-gray-500 max-w-md mx-auto mt-1">Upload proposals using the <strong>Proposal Ingestion</strong> tab to run multi-criteria evaluation.</p>
+                    `;
+                }
+                if (tableWrap) tableWrap.classList.add('hidden');
+                return;
+            }
+
+            if (emptyState) emptyState.classList.add('hidden');
+            if (tableWrap) tableWrap.classList.remove('hidden');
+            if (tbody) tbody.innerHTML = '';
+
+            const countBadge = document.getElementById('shortlistCountBadge');
+            if (countBadge) countBadge.innerText = `${data.ranked_solutions.length} Ranked`;
+
+            data.ranked_solutions.forEach((item) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/80 transition-colors border-b border-gray-100';
+
+                // Rank Badge
+                let rankBadge = `<span class="inline-flex items-center justify-center w-7 h-7 rounded-full font-bold text-xs bg-slate-100 text-slate-700">#${item.rank}</span>`;
+                if (item.rank === 1) rankBadge = `<span class="inline-flex items-center justify-center w-7 h-7 rounded-full font-bold text-xs bg-amber-100 text-amber-800 border border-amber-300">🥇</span>`;
+                else if (item.rank === 2) rankBadge = `<span class="inline-flex items-center justify-center w-7 h-7 rounded-full font-bold text-xs bg-slate-200 text-slate-800 border border-slate-300">🥈</span>`;
+                else if (item.rank === 3) rankBadge = `<span class="inline-flex items-center justify-center w-7 h-7 rounded-full font-bold text-xs bg-orange-100 text-orange-800 border border-orange-300">🥉</span>`;
+
+                // Score Color
+                let scoreBg = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+                if (item.final_score < 7.0 && item.final_score >= 5.0) scoreBg = 'bg-blue-50 text-blue-800 border-blue-200';
+                else if (item.final_score < 5.0) scoreBg = 'bg-rose-50 text-rose-800 border-rose-200';
+
+                const sc = item.scores || {};
+                const jus = item.justification || {};
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3.5 text-center">${rankBadge}</td>
+                    <td class="px-4 py-3.5">
+                        <div class="font-bold text-gray-900">${item.startup_name}</div>
+                        <div class="text-[11px] text-gray-500 font-mono flex items-center gap-1 mt-0.5">
+                            <span>📄 ${item.filename || 'proposal.pdf'}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3.5 text-center">
+                        <span class="inline-block px-2.5 py-1 rounded-lg font-black text-sm border ${scoreBg}">
+                            ${item.final_score.toFixed(1)} <span class="text-[10px] font-normal text-gray-500">/ 10</span>
+                        </span>
+                    </td>
+                    <td class="px-4 py-3.5">
+                        <div class="grid grid-cols-4 gap-1.5 text-[11px] max-w-sm">
+                            <div title="Technical Fit: ${sc.technical_fit || sc.relevance || 0}/5">
+                                <span class="text-[10px] text-gray-400">Tech Fit</span>
+                                <div class="font-bold text-indigo-700">${sc.technical_fit || sc.relevance || 0}/5</div>
+                            </div>
+                            <div title="Impact: ${sc.expected_impact || 0}/5">
+                                <span class="text-[10px] text-gray-400">Impact</span>
+                                <div class="font-bold text-blue-700">${sc.expected_impact || 0}/5</div>
+                            </div>
+                            <div title="Feasibility: ${sc.feasibility || 0}/5">
+                                <span class="text-[10px] text-gray-400">Feasib.</span>
+                                <div class="font-bold text-emerald-700">${sc.feasibility || 0}/5</div>
+                            </div>
+                            <div title="Cost: ${sc.cost_effectiveness || 0}/5">
+                                <span class="text-[10px] text-gray-400">Cost</span>
+                                <div class="font-bold text-amber-700">${sc.cost_effectiveness || 0}/5</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3.5 text-center">
+                        <div class="flex flex-col items-center gap-1">
+                            ${item.is_doable !== false 
+                                ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800">✓ Viable</span>` 
+                                : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">✕ Unviable (-3.0)</span>`}
+                            ${item.flag_count > 0 
+                                ? `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200" title="${(item.consistency_flags || []).join('; ')}">⚠ ${item.flag_count} Bluff Flag (-${item.penalty_applied})</span>` 
+                                : `<span class="text-[10px] text-gray-400">No Bluffs</span>`}
+                        </div>
+                    </td>
+                    <td class="px-4 py-3.5 text-right">
+                        <button onclick="toggleDetails(${item.solution_id})" class="text-xs text-indigo-600 hover:text-indigo-900 font-semibold underline">
+                            Audit Details &darr;
+                        </button>
+                    </td>
+                `;
+
+                // Hidden Details Row
+                const detailsTr = document.createElement('tr');
+                detailsTr.id = `details-row-${item.solution_id}`;
+                detailsTr.className = 'hidden bg-slate-50/90 border-b border-gray-200';
+                detailsTr.innerHTML = `
+                    <td colspan="6" class="px-6 py-4">
+                        <div class="bg-white rounded-lg p-4 border border-gray-200 space-y-3 text-xs">
+                            <div class="font-bold text-gray-800 text-sm flex items-center justify-between border-b pb-2">
+                                <span>LLM-as-a-Judge Justification Matrix (Gemini 3.5 Flash)</span>
+                                <span class="text-xs text-gray-500 font-normal">Practicality: ${item.doability_reason || 'Verified'}</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <strong class="text-indigo-900">Technical Fit:</strong>
+                                    <p class="text-gray-600 mt-0.5">${jus.technical_fit || jus.relevance || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <strong class="text-blue-900">Expected Impact:</strong>
+                                    <p class="text-gray-600 mt-0.5">${jus.expected_impact || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <strong class="text-emerald-900">Feasibility of Implementation:</strong>
+                                    <p class="text-gray-600 mt-0.5">${jus.feasibility || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <strong class="text-amber-900">Cost Effectiveness:</strong>
+                                    <p class="text-gray-600 mt-0.5">${jus.cost_effectiveness || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <strong class="text-purple-900">Security & Data Privacy:</strong>
+                                    <p class="text-gray-600 mt-0.5">${jus.security_privacy || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <strong class="text-sky-900">Team Credentials:</strong>
+                                    <p class="text-gray-600 mt-0.5">${jus.team_capability || jus.team_credibility || 'N/A'}</p>
+                                </div>
+                            </div>
+                            ${(item.consistency_flags && item.consistency_flags.length > 0) ? `
+                                <div class="bg-red-50 p-3 rounded border border-red-200 mt-2">
+                                    <strong class="text-red-900 block mb-1">Contradiction Flags Detected:</strong>
+                                    <ul class="list-disc pl-4 text-red-700 space-y-0.5">
+                                        ${item.consistency_flags.map(f => `<li>${f}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+
+                if (tbody) {
+                    tbody.appendChild(tr);
+                    tbody.appendChild(detailsTr);
+                }
+            });
+
+        } catch (err) {
+            console.error('Shortlist error:', err);
+            alert('Failed to load shortlist: ' + err.message);
+        } finally {
+            if (btn) btn.disabled = false;
+            if (icon) icon.innerText = '⚡';
+            if (text) text.innerText = 'Run AI Shortlisting';
+        }
+    }
+
+    function toggleDetails(solId) {
+        const row = document.getElementById(`details-row-${solId}`);
+        if (row) row.classList.toggle('hidden');
+    }
+
+    // 2. Semantic Search
+    function setSearch(txt) {
+        const input = document.getElementById('searchInput');
+        if (input) input.value = txt;
+        runSemanticSearch();
+    }
+
+    async function runSemanticSearch(e) {
+        if (e) e.preventDefault();
+        const input = document.getElementById('searchInput');
+        if (!input) return;
+        const query = input.value.trim();
+        if (!query) return;
+
+        const resultsArea = document.getElementById('searchResultsArea');
+        if (!resultsArea) return;
+        resultsArea.innerHTML = '<div class="text-center py-6 text-gray-500 text-xs"><span>Searching 384-D vector space in ChromaDB...</span></div>';
+
+        try {
+            const res = await fetch(`/search?problem_id=${activeProblemId}&query=${encodeURIComponent(query)}&top_k=8`);
+            const data = await res.json();
+
+            if (!data.results || data.results.length === 0) {
+                resultsArea.innerHTML = `
+                    <div class="bg-white rounded-xl p-6 text-center border border-gray-200 text-xs text-gray-500">
+                        No vector matches found above cosine similarity threshold for "${query}".
+                    </div>
+                `;
+                return;
+            }
+
+            resultsArea.innerHTML = `
+                <div class="text-xs font-semibold text-gray-600 mb-2">
+                    Found ${data.results.length} relevant chunks for "<span class="text-indigo-600">${query}</span>":
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    ${data.results.map(r => `
+                        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-xs hover:border-indigo-300 transition-all text-xs">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-gray-900 flex items-center gap-1.5">
+                                    <span>🏢</span> ${r.startup_name}
+                                </span>
+                                <span class="px-2 py-0.5 rounded-full font-bold text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    ${(r.similarity_score * 100).toFixed(1)}% Match
+                                </span>
+                            </div>
+                            <p class="text-gray-600 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-100 line-clamp-4">
+                                "${r.chunk}"
+                            </p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        } catch (err) {
+            resultsArea.innerHTML = `<div class="p-4 bg-red-50 text-red-700 rounded-lg text-xs">Search error: ${err.message}</div>`;
+        }
+    }
+
+    // 3. Handle Proposal Upload
+    async function handleProposalUpload(e) {
+        e.preventDefault();
+        const startupName = document.getElementById('uploadStartupName').value.trim();
+        const fileInput = document.getElementById('proposalFileInput');
+        const probId = document.getElementById('uploadProblemId').value;
+
+        if (!fileInput.files || !fileInput.files[0]) {
+            alert('Please select a proposal file.');
+            return;
+        }
+
+        const log = document.getElementById('ingestionLiveLog');
+        if (log) log.innerHTML = '';
+        function appendLog(msg, color = 'text-slate-300') {
+            if (!log) return;
+            const div = document.createElement('div');
+            div.className = color;
+            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        appendLog(`Ingesting proposal for: "${startupName}"...`, 'text-indigo-400');
+        appendLog(`File: ${fileInput.files[0].name} (${(fileInput.files[0].size/1024).toFixed(1)} KB)`);
+
+        const formData = new FormData();
+        formData.append('problem_id', probId);
+        formData.append('startup_name', startupName);
+        formData.append('file', fileInput.files[0]);
+
+        const btn = document.getElementById('btnUploadProposal');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳ Processing & Indexing...</span>';
+        }
+
+        try {
+            appendLog('Step 1: Parsing PDF/DOCX byte streams with PyMuPDF...', 'text-slate-400');
+            appendLog('Step 2: Checking DPIIT & Turnover Rule-Based Gatekeeper...', 'text-slate-400');
+
+            const res = await fetch('/startup/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.status === 'success') {
+                appendLog('Step 3: Solution parameters extracted successfully!', 'text-emerald-400');
+                appendLog(`Eligibility Status: ${data.eligible ? 'ELIGIBLE' : 'REJECTED'} (${data.eligibility_reason})`, data.eligible ? 'text-emerald-400' : 'text-rose-400');
+                if (data.consistency_flags && data.consistency_flags.length > 0) {
+                    appendLog(`Bluff Audit: ${data.consistency_flags.length} contradiction(s) flagged:`, 'text-amber-400');
+                    data.consistency_flags.forEach(f => appendLog(`  ⚠ ${f}`, 'text-amber-300'));
+                } else {
+                    appendLog('Bluff Audit: Zero internal contradictions found.', 'text-emerald-400');
+                }
+                appendLog('Step 4: Chunks transformed into 384-D vectors & upserted to ChromaDB collection.', 'text-cyan-400');
+                appendLog(`Ready! Solution ID #${data.solution_id} is now available in ranking matrix.`, 'text-green-300 font-bold');
+
+                alert(`🎉 Proposal for "${startupName}" successfully ingested and indexed!`);
+                loadShortlist();
+            } else {
+                appendLog(`Upload Error: ${data.detail || JSON.stringify(data)}`, 'text-rose-400');
+            }
+        } catch (err) {
+            appendLog(`Network Error: ${err.message}`, 'text-rose-400');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<span>⚡ Ingest, Chunk & Index into ChromaDB</span>';
+            }
+        }
+    }
+
+    // 4. Handle Deconstruct Problem
+    async function handleDeconstructProblem(e) {
+        e.preventDefault();
+        const text = document.getElementById('rawProblemInput').value.trim();
+        if (!text) return;
+
+        const btn = document.getElementById('btnDeconstruct');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span>🤖 Extracting Rubric with Gemini 3.5 Flash...</span>';
+        }
+
+        const area = document.getElementById('deconstructedResultArea');
+        if (area) {
+            area.classList.remove('hidden');
+            area.innerHTML = '<div class="text-center py-6 text-gray-500 text-xs">Parsing operational problem into 8 dimensions...</div>';
+        }
+
+        try {
+            const res = await fetch('/problem', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ problem_text: text })
+            });
+            const data = await res.json();
+
+            if (data && data.requirements && area) {
+                const req = data.requirements;
+                const rubric = req.evaluation_rubric || {};
+
+                area.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between border-b pb-3">
+                            <div>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 uppercase">${req.domain || 'GovTech'}</span>
+                                <h3 class="text-base font-bold text-gray-900 mt-1">Problem ID #${data.problem_id} Deconstructed</h3>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                                Severity: ${(req.problem_severity || 'High').toUpperCase()}
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                            <div class="bg-gray-50 p-3 rounded-lg border">
+                                <strong class="text-gray-900 block mb-1">Target End Users:</strong>
+                                <p class="text-gray-600">${req.target_users || 'Government operators'}</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-lg border">
+                                <strong class="text-gray-900 block mb-1">Mandatory Constraints:</strong>
+                                <p class="text-gray-600">${(req.constraints || []).join(', ') || 'Standard procurement rules'}</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">Formulated 8-Dimension Evaluation Rubric</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+                                <div class="bg-indigo-50/80 p-2.5 rounded border border-indigo-100">
+                                    <div class="font-bold text-indigo-900">1. Tech Fit (25%)</div>
+                                    <p class="text-gray-600 text-[11px] mt-1">${(rubric.technical_fit_criteria || [])[0] || 'Technical alignment'}</p>
+                                </div>
+                                <div class="bg-blue-50/80 p-2.5 rounded border border-blue-100">
+                                    <div class="font-bold text-blue-900">2. Impact (20%)</div>
+                                    <p class="text-gray-600 text-[11px] mt-1">${(rubric.expected_impact_metrics || [])[0] || 'Measurable KPIs'}</p>
+                                </div>
+                                <div class="bg-emerald-50/80 p-2.5 rounded border border-emerald-100">
+                                    <div class="font-bold text-emerald-900">3. Feasibility (15%)</div>
+                                    <p class="text-gray-600 text-[11px] mt-1">${(rubric.feasibility_constraints || [])[0] || 'Timeline & readiness'}</p>
+                                </div>
+                                <div class="bg-amber-50/80 p-2.5 rounded border border-amber-100">
+                                    <div class="font-bold text-amber-900">4. Cost (10%)</div>
+                                    <p class="text-gray-600 text-[11px] mt-1">${(rubric.cost_budget_thresholds || [])[0] || 'Budget cap compliance'}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-2">
+                            <button onclick="activeProblemId = ${data.problem_id}; document.getElementById('activeProblemIdDisplay').innerText = activeProblemId; switchTab('tab-shortlist'); loadShortlist();" 
+                                class="bg-indigo-600 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors">
+                                ➔ Set as Active Problem & View Shortlist
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        } catch (err) {
+            if (area) area.innerHTML = `<div class="p-3 bg-red-50 text-red-700 rounded text-xs">Error: ${err.message}</div>`;
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<span>🤖 Deconstruct with AI & Formulate Rubric</span>';
+            }
+        }
+    }
+
+    // Auto-load shortlist on initial view
+    document.addEventListener('DOMContentLoaded', () => {
+        loadShortlist();
+    });
+</script>
